@@ -1,0 +1,17 @@
+Identify 2-3 problems
+- ex. Fourier Transform
+- Real World I/O (ex File I/O)
+- Number Crunching
+- Client/Server
+-- Server serving 100,000s of clients
+-- Sequence of Operations is valid
+
+Check out AWS
+
+Multi-Processor or Distributed Network
+ or Compute Shaders
+
+Hough Transform
+
+Review Histogram Equalization if it makes
+ sense.
