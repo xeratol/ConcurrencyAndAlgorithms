@@ -11,6 +11,13 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Study03", "Study03\Study03.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Study04", "Study04\Study04.vcxproj", "{D9E8BBC6-BEF4-436F-8A7A-1218BF934A3A}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Common", "common\Common.vcxproj", "{8CDE852F-8B59-496D-8C15-FB6A94D3CB7D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Study05", "Study05\Study05.vcxproj", "{59B9AA31-9D6B-4BC5-833F-253D0BA71DF8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8CDE852F-8B59-496D-8C15-FB6A94D3CB7D} = {8CDE852F-8B59-496D-8C15-FB6A94D3CB7D}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -33,6 +40,14 @@ Global
 		{D9E8BBC6-BEF4-436F-8A7A-1218BF934A3A}.Debug|x64.Build.0 = Debug|x64
 		{D9E8BBC6-BEF4-436F-8A7A-1218BF934A3A}.Release|x64.ActiveCfg = Release|x64
 		{D9E8BBC6-BEF4-436F-8A7A-1218BF934A3A}.Release|x64.Build.0 = Release|x64
+		{8CDE852F-8B59-496D-8C15-FB6A94D3CB7D}.Debug|x64.ActiveCfg = Debug|x64
+		{8CDE852F-8B59-496D-8C15-FB6A94D3CB7D}.Debug|x64.Build.0 = Debug|x64
+		{8CDE852F-8B59-496D-8C15-FB6A94D3CB7D}.Release|x64.ActiveCfg = Release|x64
+		{8CDE852F-8B59-496D-8C15-FB6A94D3CB7D}.Release|x64.Build.0 = Release|x64
+		{59B9AA31-9D6B-4BC5-833F-253D0BA71DF8}.Debug|x64.ActiveCfg = Debug|x64
+		{59B9AA31-9D6B-4BC5-833F-253D0BA71DF8}.Debug|x64.Build.0 = Debug|x64
+		{59B9AA31-9D6B-4BC5-833F-253D0BA71DF8}.Release|x64.ActiveCfg = Release|x64
+		{59B9AA31-9D6B-4BC5-833F-253D0BA71DF8}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
