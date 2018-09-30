@@ -4,10 +4,12 @@
 #include <algorithm>
 #include <mutex>
 
+// global variable - all threads can see this
 std::mutex cout_mutex;
 
 void print(int val)
 {
+    // only one thread can lock the global mutex at a time
     std::lock_guard<std::mutex> guard(cout_mutex);
     std::cout << "Thread " << std::this_thread::get_id() << ": " << val << std::endl;
 }
