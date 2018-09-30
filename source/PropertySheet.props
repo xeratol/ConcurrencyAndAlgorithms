@@ -15,7 +15,7 @@
     </ClCompile>
     <ClCompile>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(SolutionDir)common\EasyBMP;$(SolutionDir)common\lodepng</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)common</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup />

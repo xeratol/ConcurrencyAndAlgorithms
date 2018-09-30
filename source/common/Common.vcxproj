@@ -10,6 +10,17 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="EasyBMP.h" />
+    <ClInclude Include="EasyBMP_BMP.h" />
+    <ClInclude Include="EasyBMP_DataStructures.h" />
+    <ClInclude Include="EasyBMP_VariousBMPutilities.h" />
+    <ClInclude Include="lodepng.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="EasyBMP.cpp" />
+    <ClCompile Include="lodepng.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{8CDE852F-8B59-496D-8C15-FB6A94D3CB7D}</ProjectGuid>
@@ -65,17 +76,6 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="EasyBMP\EasyBMP.cpp" />
-    <ClCompile Include="lodepng\lodepng.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="EasyBMP\EasyBMP.h" />
-    <ClInclude Include="EasyBMP\EasyBMP_BMP.h" />
-    <ClInclude Include="EasyBMP\EasyBMP_DataStructures.h" />
-    <ClInclude Include="EasyBMP\EasyBMP_VariousBMPutilities.h" />
-    <ClInclude Include="lodepng\lodepng.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
