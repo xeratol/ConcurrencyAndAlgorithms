@@ -1,17 +1,16 @@
 Identify 2-3 problems
-- ex. Fourier Transform
-- Real World I/O (ex File I/O)
-- Number Crunching
+- ex. Fourier Transform <- will eventually do
+- Real World I/O (ex File I/O) <- file i/o limited by bandwidth, not processing
+- Number Crunching <- Matrix Operations, Convolutions
 - Client/Server
 -- Server serving 100,000s of clients
 -- Sequence of Operations is valid
 
 Check out AWS
 
-Multi-Processor or Distributed Network
- or Compute Shaders
+Multi-Processor or Distributed Network or Compute Shaders
+<- Unity3D Compute Shaders (based on DirectCompute); physics-affected particle system
 
 Hough Transform
 
-Review Histogram Equalization if it makes
- sense.
+Review Histogram Equalization if it makes sense.

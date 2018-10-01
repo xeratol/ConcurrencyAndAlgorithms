@@ -3,7 +3,7 @@
 #include <vector>
 #include <algorithm>
 
-void increment(int a) // try removing &
+void increment(int &a) // int &a
 {
     ++a;
 }
@@ -14,7 +14,7 @@ int main()
     auto threads = std::vector<std::thread>();
     for (auto i = 0; i < 10; ++i)
     {
-        threads.emplace_back(increment, std::ref(a)); // try removing std::ref
+        threads.emplace_back(increment, std::ref(a)); // std::ref(a)
     }
 
     std::for_each(threads.begin(), threads.end(), [](std::thread& t)
