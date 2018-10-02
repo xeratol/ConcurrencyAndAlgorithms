@@ -5,12 +5,16 @@ Identify 2-3 problems
 - Client/Server
 -- Server serving 100,000s of clients
 -- Sequence of Operations is valid
+-- Hough Transform
 
 Check out AWS
 
 Multi-Processor or Distributed Network or Compute Shaders
 <- Unity3D Compute Shaders (based on DirectCompute); physics-affected particle system
 
-Hough Transform
-
 Review Histogram Equalization if it makes sense.
+
+----
+
+Find out how to force a race condition via std::this_thread::Sleep_*
+For Image Convert example, use tiles instead of rows. Consider cache size.

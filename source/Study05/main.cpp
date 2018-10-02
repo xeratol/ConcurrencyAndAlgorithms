@@ -22,7 +22,8 @@ unsigned int GetOptimalNumberOfThreads(const unsigned int numTasks)
     return (numTasks > hardwareThreadCount) ? hardwareThreadCount : numTasks;
 }
 
-void ConvertToGrayscale(std::vector<unsigned char>& image, const unsigned int width, const unsigned int startHeight, const unsigned int endHeight)
+void ConvertToGrayscale(std::vector<unsigned char>& image, const unsigned int width,
+    const unsigned int startHeight, const unsigned int endHeight)
 {
     for (auto x = 0ul; x < width; ++x)
     {
