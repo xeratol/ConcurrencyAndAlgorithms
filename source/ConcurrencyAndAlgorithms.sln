@@ -24,6 +24,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Study07", "Study07\Study07.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Study08", "Study08\Study08.vcxproj", "{33FF4834-FEAF-40B3-B727-070D4D038BEE}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Study09", "Study09\Study09.vcxproj", "{8E370955-8B99-48A3-8578-ADC5C9E39343}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Study10", "Study10\Study10.vcxproj", "{76993206-F198-4C9F-A1AD-A5D2D227DAD8}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Study11", "Study11\Study11.vcxproj", "{0C6AED68-1CEE-47EB-9435-5039D89C715D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -66,6 +72,18 @@ Global
 		{33FF4834-FEAF-40B3-B727-070D4D038BEE}.Debug|x64.Build.0 = Debug|x64
 		{33FF4834-FEAF-40B3-B727-070D4D038BEE}.Release|x64.ActiveCfg = Release|x64
 		{33FF4834-FEAF-40B3-B727-070D4D038BEE}.Release|x64.Build.0 = Release|x64
+		{8E370955-8B99-48A3-8578-ADC5C9E39343}.Debug|x64.ActiveCfg = Debug|x64
+		{8E370955-8B99-48A3-8578-ADC5C9E39343}.Debug|x64.Build.0 = Debug|x64
+		{8E370955-8B99-48A3-8578-ADC5C9E39343}.Release|x64.ActiveCfg = Release|x64
+		{8E370955-8B99-48A3-8578-ADC5C9E39343}.Release|x64.Build.0 = Release|x64
+		{76993206-F198-4C9F-A1AD-A5D2D227DAD8}.Debug|x64.ActiveCfg = Debug|x64
+		{76993206-F198-4C9F-A1AD-A5D2D227DAD8}.Debug|x64.Build.0 = Debug|x64
+		{76993206-F198-4C9F-A1AD-A5D2D227DAD8}.Release|x64.ActiveCfg = Release|x64
+		{76993206-F198-4C9F-A1AD-A5D2D227DAD8}.Release|x64.Build.0 = Release|x64
+		{0C6AED68-1CEE-47EB-9435-5039D89C715D}.Debug|x64.ActiveCfg = Debug|x64
+		{0C6AED68-1CEE-47EB-9435-5039D89C715D}.Debug|x64.Build.0 = Debug|x64
+		{0C6AED68-1CEE-47EB-9435-5039D89C715D}.Release|x64.ActiveCfg = Release|x64
+		{0C6AED68-1CEE-47EB-9435-5039D89C715D}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
