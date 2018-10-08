@@ -40,6 +40,7 @@ std::future<void> queue_task(Callable f)
 
 void print_task(const std::string& s)
 {
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     std::cout << s << " executing in " << std::this_thread::get_id() << std::endl;
 }
 
