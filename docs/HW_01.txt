@@ -17,4 +17,10 @@ Review Histogram Equalization if it makes sense.
 ----
 
 Find out how to force a race condition via std::this_thread::Sleep_*
+ -> demonstrated using shared_future
 For Image Convert example, use tiles instead of rows. Consider cache size.
+
+----
+
+Parallel Quicksort
+Start Compute Shaders of Unity3D -> animated texture
