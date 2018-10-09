@@ -3,7 +3,7 @@
 #include <chrono>
 
 const auto sleepMs = 1000;
-const auto timeoutMs = 1500;
+const auto timeoutMs = 500;
 
 int main()
 {

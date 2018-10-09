@@ -21,7 +21,7 @@ int asnyc_func()
 int main()
 {
     std::cout << "Main Thread ID: " << std::this_thread::get_id() << std::endl;
-    std::future<int> data = std::async(asnyc_func);                 // std::launch::async or std::launch::deferred
+    std::future<int> data = std::async(asnyc_func);                 // std::launch::async (default) or std::launch::deferred
     std::cout << "Main Thread sleeps" << std::endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(mainSleep));
     std::cout << "Main Thread wakes" << std::endl;

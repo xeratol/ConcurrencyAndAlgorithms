@@ -24,7 +24,7 @@ void consumer_thread()
     std::unique_lock<std::mutex> consumer_lock(data_mutex); // needs to be unique_lock to be able to unlock
     data_cond.wait(consumer_lock, // lock mutex and check co-supplied function
         // if function returns true; keep lock and proceed
-        // if function returns false; block the thread, unlock mutex and try again later
+        // if function returns false; block the thread, unlock mutex, and try again later
     [] {
         // this function could be called multiple times to check
         // if it returns true, with or without notification

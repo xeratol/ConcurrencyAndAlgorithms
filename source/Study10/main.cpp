@@ -20,7 +20,11 @@ void consumer(std::shared_future<int> sharedFuture)
 
 int main()
 {
-    std::shared_future<int> data = std::async(producer).share();
+    auto data_orig = std::async(producer);
+    std::shared_future<int> data = data_orig.share();
+
+    // data_orig is no longer valid when it's converted into a shared_future
+
     // shared_future is copied, not moved
     std::thread worker1(consumer, data);
     std::thread worker2(consumer, data);

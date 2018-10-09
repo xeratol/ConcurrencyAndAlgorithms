@@ -24,7 +24,13 @@ void worker_thread()
             task = std::move(tasks.front());
             tasks.pop_front();
         }
-        task();
+
+        // execute in worker thread
+        //task();
+
+        // dispatch subthreads
+        std::thread worker_subthread(std::move(task));
+        worker_subthread.detach(); // safe to detach because a future will block
     }
 }
 
@@ -38,9 +44,9 @@ std::future<void> queue_task(Callable f)
     return return_future;
 }
 
-void print_task(const std::string& s)
+void print_task(const std::string& s, const int timeDelaySeconds)
 {
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::seconds(timeDelaySeconds));
     std::cout << s << " executing in " << std::this_thread::get_id() << std::endl;
 }
 
@@ -49,13 +55,13 @@ int main()
     std::cout << "main thread: " << std::this_thread::get_id() << std::endl;
     std::thread worker(worker_thread);
 
-    auto task1 = queue_task([] { print_task("task1"); });
-    auto task2 = queue_task([] { print_task("task2"); });
-    auto task3 = queue_task([] { print_task("task3"); });
+    auto task1_future = queue_task([] { print_task("task1", 10); });
+    auto task2_future = queue_task([] { print_task("task2", 9); });
+    auto task3_future = queue_task([] { print_task("task3", 8); });
 
-    task1.wait();
-    task2.wait();
-    task3.wait();
+    task1_future.wait();
+    task2_future.wait();
+    task3_future.wait();
 
     worker_done = true;
     worker.join();
