@@ -3,6 +3,12 @@
 #include <future>
 #include <chrono>
 
+/* Note: Run in Debug with No Optimization to see the difference */
+
+#define ENABLE_PRINT 0
+#define NUM_ELEMENTS 1000
+#define NUM_MOVES 10000
+
 void populate_sorted(std::list<int>& data, int numElements)
 {
     int i = 0;
@@ -13,31 +19,44 @@ void populate_sorted(std::list<int>& data, int numElements)
     }
 }
 
+void print(const std::list<int>& data)
+{
+#if !ENABLE_PRINT
+    return;
+#endif
+    std::for_each(data.begin(), data.end(), [](int d)
+    {
+        std::cout << d << " ";
+    });
+    std::cout << std::endl << std::endl;
+}
+
 int main()
 {
     std::list<int> source;
-    std::list<int> temp;
-    populate_sorted(source, 1000);
+    populate_sorted(source, NUM_ELEMENTS);
+    print(source);
 
     auto startTime = std::chrono::high_resolution_clock::now();
-    for (auto i = 0; i < 1000; ++i)
+    for (auto i = 0; i < NUM_MOVES; ++i)
     {
-        temp = std::move(source);
+        std::list<int> temp = std::move(source);
         source = std::move(temp);
     }
     auto stopTime = std::chrono::high_resolution_clock::now();
-    std::cout << "Duration: " << std::chrono::duration<float, std::milli>(stopTime - startTime).count() << "ms" << std::endl;
+    std::cout << "Single Thread: " << std::chrono::duration<float, std::milli>(stopTime - startTime).count() << "ms" << std::endl;
+    print(source);
 
-    std::future<std::list<int>> tempFuture;
     startTime = std::chrono::high_resolution_clock::now();
-    for (auto i = 0; i < 1000; ++i)
+    for (auto i = 0; i < NUM_MOVES; ++i)
     {
-        tempFuture = std::async([s = std::move(source)] { return s; });
+        std::future<std::list<int>> tempFuture = std::async([s = std::move(source)] { return s; });
         source = std::move(tempFuture.get());
     }
     stopTime = std::chrono::high_resolution_clock::now();
 
-    std::cout << "Duration: " << std::chrono::duration<float, std::milli>(stopTime - startTime).count() << "ms" << std::endl;
+    std::cout << "Double Threads: " << std::chrono::duration<float, std::milli>(stopTime - startTime).count() << "ms" << std::endl;
+    print(source);
 
     return 0;
 }
