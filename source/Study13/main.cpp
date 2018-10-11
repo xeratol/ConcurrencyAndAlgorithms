@@ -3,9 +3,12 @@
 #include <algorithm>
 #include <random>
 #include <chrono>
+#include <future>
 #include <memory>
 
 #include <cassert>
+
+#define USE_PARALLEL 0
 
 void populate_sorted(std::list<int>& data, int numElements)
 {
@@ -57,23 +60,21 @@ void print(const std::list<int>& data)
     std::cout << std::endl << std::endl;
 }
 
-std::list<int> qsort(std::list<int> &&source)
+template <typename T>
+std::list<T> quickSort(std::list<T>&& source)
 {
-    std::list<int> result;
     if (source.size() <= 1)
     {
-        result.splice(result.end(), source);
-        return result;
+        return source;
     }
 
     int pivotValue = source.front();
     source.pop_front(); // memory deallocation
 
-    //auto lower = std::make_unique<std::list<int>>();
-    std::list<int> lower;
-    //auto higher = std::make_unique<std::list<int>>();
-    std::list<int> higher;
+    std::list<T> lower;
+    std::list<T> higher;
 
+    // partitioning
     while (!source.empty())
     {
         auto it = source.begin();
@@ -89,35 +90,49 @@ std::list<int> qsort(std::list<int> &&source)
 
     assert(source.size() == 0);
 
-    if (lower.size() > 0)
-    {
-        result.splice(result.end(), qsort(std::move(lower)));
-    }
+    // recursion
+#if USE_PARALLEL
+    std::future<std::list<T>> newLower = std::async(quickSort<T>, std::move(lower));
+#else
+    lower = quickSort(std::move(lower));
+#endif
+    higher = quickSort(std::move(higher));
 
+    // merging
+    std::list<T> result;
     result.push_back(pivotValue); // memory allocation
-
-    if (higher.size() > 0)
-    {
-        result.splice(result.end(), qsort(std::move(higher)));
-    }
+    result.splice(result.end(), higher);
+#if USE_PARALLEL
+    result.splice(result.begin(), newLower.get());
+#else
+    result.splice(result.begin(), lower);
+#endif
 
     return result;
 }
 
 int main()
 {
+    const int numElements = 1000;
     std::list<int> source;
-    populate_random(source, 1000);
+    //populate_sorted(source, numElements);
+    populate_random(source, numElements);
 
     std::cout << (isSorted(source) ? "sorted" : "not sorted") << std::endl;
-    //print(source);
+    if (numElements <= 20)
+    {
+        print(source);
+    }
 
     auto startTime = std::chrono::high_resolution_clock::now();
-    auto final = qsort(std::move(source));
+    source = quickSort(std::move(source));
     auto stopTime = std::chrono::high_resolution_clock::now();
 
-    std::cout << (isSorted(final) ? "sorted" : "not sorted") << std::endl;
-    //print(source);
+    std::cout << (isSorted(source) ? "sorted" : "not sorted") << std::endl;
+    if (numElements <= 20)
+    {
+        print(source);
+    }
 
     std::cout << "Duration: " << std::chrono::duration<float, std::milli>(stopTime - startTime).count() << "ms" << std::endl;
     return 0;
