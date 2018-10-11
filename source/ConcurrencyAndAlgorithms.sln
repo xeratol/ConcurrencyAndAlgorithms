@@ -34,6 +34,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Study12", "Study12\Study12.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Study13", "Study13\Study13.vcxproj", "{978BDA01-A2BB-43D8-ACD7-AA487E941142}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Study14", "Study14\Study14.vcxproj", "{745F4146-D47C-47B1-9922-6D20B70F4357}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -96,6 +98,10 @@ Global
 		{978BDA01-A2BB-43D8-ACD7-AA487E941142}.Debug|x64.Build.0 = Debug|x64
 		{978BDA01-A2BB-43D8-ACD7-AA487E941142}.Release|x64.ActiveCfg = Release|x64
 		{978BDA01-A2BB-43D8-ACD7-AA487E941142}.Release|x64.Build.0 = Release|x64
+		{745F4146-D47C-47B1-9922-6D20B70F4357}.Debug|x64.ActiveCfg = Debug|x64
+		{745F4146-D47C-47B1-9922-6D20B70F4357}.Debug|x64.Build.0 = Debug|x64
+		{745F4146-D47C-47B1-9922-6D20B70F4357}.Release|x64.ActiveCfg = Release|x64
+		{745F4146-D47C-47B1-9922-6D20B70F4357}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
