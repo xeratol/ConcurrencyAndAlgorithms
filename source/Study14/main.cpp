@@ -6,7 +6,7 @@
 /* Note: Run in Debug with No Optimization to see the difference */
 
 #define ENABLE_PRINT 0
-#define NUM_ELEMENTS 1000
+#define NUM_ELEMENTS 10000
 #define NUM_MOVES 10000
 
 void populate_sorted(std::list<int>& data, int numElements)

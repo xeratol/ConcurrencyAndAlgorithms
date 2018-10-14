@@ -8,7 +8,9 @@
 
 #include <cassert>
 
-#define USE_PARALLEL 0
+#define USE_PARALLEL 1
+#define ENABLE_PRINT 0
+#define NUM_ELEMENTS 1000
 
 void populate_sorted(std::list<int>& data, int numElements)
 {
@@ -113,26 +115,23 @@ std::list<T> quickSort(std::list<T>&& source)
 
 int main()
 {
-    const int numElements = 1000;
     std::list<int> source;
-    //populate_sorted(source, numElements);
-    populate_random(source, numElements);
+    populate_sorted(source, NUM_ELEMENTS);
+    //populate_random(source, NUM_ELEMENTS);
 
     std::cout << (isSorted(source) ? "sorted" : "not sorted") << std::endl;
-    if (numElements <= 20)
-    {
-        print(source);
-    }
+#if ENABLE_PRINT
+    print(source);
+#endif
 
     auto startTime = std::chrono::high_resolution_clock::now();
     source = quickSort(std::move(source));
     auto stopTime = std::chrono::high_resolution_clock::now();
 
     std::cout << (isSorted(source) ? "sorted" : "not sorted") << std::endl;
-    if (numElements <= 20)
-    {
-        print(source);
-    }
+#if ENABLE_PRINT
+    print(source);
+#endif
 
     std::cout << "Duration: " << std::chrono::duration<float, std::milli>(stopTime - startTime).count() << "ms" << std::endl;
     return 0;
