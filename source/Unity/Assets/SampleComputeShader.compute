@@ -1,11 +1,33 @@
 ﻿#pragma kernel CSMain
+#pragma kernel ThreadIDDemo
+#pragma kernel BlinkingRed
 
 float time;
 RWTexture2D<float3> Result;
 
-[numthreads(8,8,1)]
+[numthreads(8, 8, 1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
-    //Result[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
-    Result[id.xy] = float3(sin(time * 2 * 3.1415) * 0.5 + 0.5, 0.0, 0.0);
+    Result[id.xy] = float3(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0);
+}
+
+[numthreads(32, 32, 1)]
+void ThreadIDDemo(uint3 groupThreadID : SV_GroupThreadID,
+    uint3 groupID : SV_GroupID,
+    uint3 id : SV_DispatchThreadID,
+    uint groupIdx : SV_GroupIndex)
+{
+    Result[id.xy] = float3(groupThreadID.x / 32.0, groupThreadID.y / 32.0, 0.0);
+    //Result[id.xy] = float3(groupID.x / 4.0, groupID.y / 4.0, 0.0);
+    //Result[id.xy] = float3(id.x / 256.0, id.y / 256.0, 0.0);
+    //Result[id.xy] = float3(groupIdx / 1024.0, groupIdx / 1024.0, groupIdx / 1024.0);
+
+    // https://docs.microsoft.com/en-us/windows/desktop/direct3dhlsl/sv-dispatchthreadid
+}
+
+[numthreads(8, 8, 1)]
+void BlinkingRed(uint3 id : SV_DispatchThreadID)
+{
+    float red = sin(time * 6.28318530718f) * 0.5f + 0.5f;
+    Result[id.xy] = float3(red, 0.0, 0.0);
 }

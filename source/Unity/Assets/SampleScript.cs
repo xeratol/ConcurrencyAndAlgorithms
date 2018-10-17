@@ -4,33 +4,30 @@ using UnityEngine;
 
 public class SampleScript : MonoBehaviour
 {
-    public ComputeShader shader;
+    public ComputeShader _shader;
+    public Renderer _renderer;
 
     RenderTexture _tex;
     int _kernelHandle;
-    Renderer _renderer;
 
     private void Awake()
     {
-        _tex = new RenderTexture(256, 256, 24);
+        // 128 x 128 texture using 24 bits (RGB)
+        _tex = new RenderTexture(128, 128, 24);
         _tex.enableRandomWrite = true;
-        _tex.Create();
+        _tex.Create(); // initialize to 0
 
-        _kernelHandle = shader.FindKernel("CSMain");
-        shader.SetTexture(_kernelHandle, "Result", _tex);
-
-        _renderer = GetComponent<Renderer>();
+        _kernelHandle = _shader.FindKernel("CSMain");
+        _shader.SetTexture(_kernelHandle, "Result", _tex);
     }
 
     void Update()
     {
-        shader.SetFloat("time", Mathf.Repeat(Time.timeSinceLevelLoad, 1.0f));
-        shader.Dispatch(_kernelHandle, 256 / 8, 256 / 8, 1);
+        _shader.SetFloat("time", Mathf.Repeat(Time.timeSinceLevelLoad, 1.0f));
+        // 128 / 8 = 16
+        // 128 / 32 = 4
+        _shader.Dispatch(_kernelHandle, 4, 4, 1);
 
-        _renderer.material.SetTexture("_MainTex", _tex);
-    }
-
-    private void OnDestroy()
-    {
+        _renderer.material.mainTexture = _tex;
     }
 }
