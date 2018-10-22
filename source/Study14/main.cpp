@@ -6,8 +6,8 @@
 /* Note: Run in Debug with No Optimization to see the difference */
 
 #define ENABLE_PRINT 0
-#define NUM_ELEMENTS 10000
-#define NUM_MOVES 10000
+#define NUM_ELEMENTS 1000
+#define NUM_MOVES 1000
 
 void populate_sorted(std::list<int>& data, int numElements)
 {
@@ -40,7 +40,9 @@ int main()
     auto startTime = std::chrono::high_resolution_clock::now();
     for (auto i = 0; i < NUM_MOVES; ++i)
     {
-        std::list<int> temp = std::move(source);
+        //std::list<int> temp = std::move(source); // ctor with rvalue (only head node moves)
+        std::list<int> temp(source); // copy ctor (deep copy)
+        std::this_thread::sleep_for(std::chrono::seconds(1)); // simulate some heavy operation
         source = std::move(temp);
     }
     auto stopTime = std::chrono::high_resolution_clock::now();
@@ -51,6 +53,8 @@ int main()
     for (auto i = 0; i < NUM_MOVES; ++i)
     {
         std::future<std::list<int>> tempFuture = std::async([s = std::move(source)] { return s; });
+        //tempFuture.wait(); // without this, parallel is faster because the moving is happening on the other thread
+        std::this_thread::sleep_for(std::chrono::seconds(1)); // simulate some heavy operation
         source = std::move(tempFuture.get());
     }
     stopTime = std::chrono::high_resolution_clock::now();

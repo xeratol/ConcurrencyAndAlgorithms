@@ -4,18 +4,21 @@
 
 auto a = 0;
 
-int synchronizing_method()
+void synchronizing_method()
 {
     std::cout << "synchronizer " << std::this_thread::get_id() << std::endl;
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    return 1;
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 }
 
 void racer(std::shared_future<int> synchronizer)
 {
     std::cout << "racer " << std::this_thread::get_id() << std::endl;
     synchronizer.wait();
-    ++a; // race condition
+
+    for (auto i = 0u; i < 1000; ++i)
+    {
+        ++a; // race condition
+    }
 }
 
 int main()

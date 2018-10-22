@@ -3,9 +3,9 @@
 #pragma kernel BlinkingRed
 
 float time;
-RWTexture2D<float3> Result;
+RWTexture2D<float3> Result; // RGB
 
-[numthreads(8, 8, 1)]
+[numthreads(8, 8, 1)] // per group
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
     Result[id.xy] = float3(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0);
@@ -19,7 +19,7 @@ void ThreadIDDemo(uint3 groupThreadID : SV_GroupThreadID,
 {
     Result[id.xy] = float3(groupThreadID.x / 32.0, groupThreadID.y / 32.0, 0.0);
     //Result[id.xy] = float3(groupID.x / 4.0, groupID.y / 4.0, 0.0);
-    //Result[id.xy] = float3(id.x / 256.0, id.y / 256.0, 0.0);
+    //Result[id.xy] = float3(id.x / 128.0, id.y / 128.0, 0.0);
     //Result[id.xy] = float3(groupIdx / 1024.0, groupIdx / 1024.0, groupIdx / 1024.0);
 
     // https://docs.microsoft.com/en-us/windows/desktop/direct3dhlsl/sv-dispatchthreadid
@@ -28,6 +28,6 @@ void ThreadIDDemo(uint3 groupThreadID : SV_GroupThreadID,
 [numthreads(8, 8, 1)]
 void BlinkingRed(uint3 id : SV_DispatchThreadID)
 {
-    float red = sin(time * 6.28318530718f) * 0.5f + 0.5f;
+    float red = sin(time * 6.28318530718f) * 0.5f + 0.5f; // [0, 1]
     Result[id.xy] = float3(red, 0.0, 0.0);
 }

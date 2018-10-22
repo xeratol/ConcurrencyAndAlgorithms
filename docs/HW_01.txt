@@ -24,3 +24,18 @@ For Image Convert example, use tiles instead of rows. Consider cache size.
 
 Parallel Quicksort
 Start Compute Shaders of Unity3D -> animated texture
+
+----
+
+Find tool to find bottlenecks in code (Profiler)
+- https://www.spec.org/benchmarks.html
+Compute Shader (Possible) Applications
+- Splines
+- N-body problem (Boids)
+
+Atomics - Theoretical
+Parallel FFT on CPU
+Compute Shaders - Particle System
+Parallel FFT on GPU
+
+----

@@ -5,9 +5,9 @@ using UnityEngine;
 public class SampleScript : MonoBehaviour
 {
     public ComputeShader _shader;
-    public Renderer _renderer;
+    public Renderer _renderer; // display the texture
 
-    RenderTexture _tex;
+    RenderTexture _tex; // need the texture for writing
     int _kernelHandle;
 
     private void Awake()
@@ -19,15 +19,14 @@ public class SampleScript : MonoBehaviour
 
         _kernelHandle = _shader.FindKernel("CSMain");
         _shader.SetTexture(_kernelHandle, "Result", _tex);
+        _renderer.material.mainTexture = _tex;
     }
 
     void Update()
     {
-        _shader.SetFloat("time", Mathf.Repeat(Time.timeSinceLevelLoad, 1.0f));
+        _shader.SetFloat("time", Mathf.Repeat(Time.timeSinceLevelLoad, 1.0f)); // [0, 1]
         // 128 / 8 = 16
         // 128 / 32 = 4
-        _shader.Dispatch(_kernelHandle, 4, 4, 1);
-
-        _renderer.material.mainTexture = _tex;
+        _shader.Dispatch(_kernelHandle, 16, 16, 1);
     }
 }
