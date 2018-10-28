@@ -2,7 +2,8 @@
 #include <future>
 #include <vector>
 
-auto a = 0;
+const auto numIncrementsPerThread = 100000ul;
+auto a = 0ull;
 
 void synchronizing_method()
 {
@@ -10,12 +11,12 @@ void synchronizing_method()
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 }
 
-void racer(std::shared_future<int> synchronizer)
+void racer(std::shared_future<void> synchronizer)
 {
     std::cout << "racer " << std::this_thread::get_id() << std::endl;
     synchronizer.wait();
 
-    for (auto i = 0u; i < 1000; ++i)
+    for (auto i = 0ul; i < numIncrementsPerThread; ++i)
     {
         ++a; // race condition
     }
