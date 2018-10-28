@@ -15,7 +15,8 @@ are meant to be personal projects and not to be used for production.
   - :file_folder: [**common**](source/common) contains some common code shared between my case studies. This includes LodePNG, EasyBMP, and some wrappers and utilities I made
   - :file_folder: [**data**](source/data) contains the data sets I used for my experiment
     - :page_facing_up: [**sources.txt**](source/data/sources.txt) contains links to some binary data (such as images) used but are impractical to copy into the repo
-  - :file_folder: **StudyXX** (where XX is a 2-digit number) contains a specific case study
+  - :file_folder: **StudyXX** (where XX is a 2-digit number) contains a specific case study (see below)
+  - :file_folder: [**Unity**](source/Unity) contains experiments with Unity's Compute Shader
 
 ## Case Studies
 ### [Study 01 - Hello World](source/Study01)
