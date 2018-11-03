@@ -7,8 +7,9 @@
 #include <cmath>
 
 #include "lodepng.h"
+//#include "EasyBMP.h"
 
-#define USE_THREADS 1
+#define USE_THREADS 0
 
 namespace fs = std::experimental::filesystem;
 
@@ -35,8 +36,8 @@ void ConvertToGrayscale(std::vector<unsigned char>& image, const unsigned int wi
             auto b = &image[index + 2];
             //auto a = image[index + 3];
 
-            auto gray = 0.3f * (*r) + 0.59f * (*g) + 0.11 * (*b);
-            *r = *g = *b = static_cast<unsigned int>(gray);
+            auto gray = 0.3f * (*r) + 0.59f * (*g) + 0.11f * (*b);
+            *r = *g = *b = static_cast<unsigned char>(gray);
         }
     }
 }
