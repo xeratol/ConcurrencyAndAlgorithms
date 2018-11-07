@@ -1,0 +1,26 @@
+﻿#pragma kernel CSMain
+
+struct Particle
+{
+    float3 pos;
+    float3 dir;
+    float life;
+};
+
+float dt;
+RWStructuredBuffer<Particle> ParticleBuffer;
+
+[numthreads(10,1,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    Particle p = ParticleBuffer[id.x];
+    p.life -= dt;
+    if (p.life <= 0)
+    {
+        p.life = 4.0;
+        p.pos = float3(0, 0, 0);
+    }
+    p.pos += p.dir * dt;
+
+    ParticleBuffer[id.x] = p;
+}
