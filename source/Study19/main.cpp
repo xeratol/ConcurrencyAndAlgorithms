@@ -1,5 +1,6 @@
 #include <iostream>
 #include <filesystem>
+#include <chrono>
 
 #include "EasyBMP.h"
 #include "matrix.h"
@@ -123,28 +124,37 @@ void WriteMatrixToImage(const matrix<std::complex<double>>& data, const std::str
 
 int main()
 {
-    auto imageMatrix = GetMatrixFromImage(fs::path("../data/square-256.bmp"));
-    //auto imageMatrix = GetMatrixFromImage(fs::path("../data/dummy.bmp"));
-    //auto imageMatrix = GetMatrixFromImage(fs::path("../data/line-256-2.bmp"));
+    
+    auto imageMatrix = GetMatrixFromImage(fs::path("../data/small-satellite-4096-2048.bmp")); // 4096x2048
+    //auto imageMatrix = GetMatrixFromImage(fs::path("../data/NGC-7635-gray.bmp")); // 1024x1024
+    //auto imageMatrix = GetMatrixFromImage(fs::path("../data/square-256.bmp")); // 256x256
+    //auto imageMatrix = GetMatrixFromImage(fs::path("../data/line-256-2.bmp")); // 256x32
     const auto MN = imageMatrix.Raw().size();
     RecenterMatrixDataForFFT(imageMatrix);
 
     matrix<std::complex<double>> intermediate;
+    auto startTime = std::chrono::high_resolution_clock::now();
 #if USE_THREADS
     imageMatrix = PFFT(imageMatrix, intermediate);
 #else
     imageMatrix = FFT(imageMatrix, intermediate);
 #endif
+    auto stopTime = std::chrono::high_resolution_clock::now();
+    auto durationMS = std::chrono::duration<float, std::milli>(stopTime - startTime).count();
 
     WriteMatrixToImage(intermediate, "fwd-byRow.bmp");
     WriteMatrixToImage(imageMatrix, "fwd-out.bmp");
 
     imageMatrix.Transform([](const std::complex<double>& d) { return std::conj(d); });
+    startTime = std::chrono::high_resolution_clock::now();
 #if USE_THREADS
     imageMatrix = PFFT(imageMatrix, intermediate);
 #else
     imageMatrix = FFT(imageMatrix, intermediate);
 #endif
+    stopTime = std::chrono::high_resolution_clock::now();
+    durationMS += std::chrono::duration<float, std::milli>(stopTime - startTime).count();
+    std::cout << "Duration: " << durationMS << "ms" << std::endl;
 
     RecenterMatrixDataForFFT(intermediate);
     intermediate.Transform([&](const std::complex<double>& d)
