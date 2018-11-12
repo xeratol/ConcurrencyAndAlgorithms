@@ -3,7 +3,14 @@
 
 #include "EasyBMP.h"
 #include "matrix.h"
+
+#define USE_THREADS 1
+
+#if USE_THREADS
+#include "pfft.h"
+#else
 #include "fft.h"
+#endif
 
 namespace fs = std::experimental::filesystem;
 
@@ -116,18 +123,28 @@ void WriteMatrixToImage(const matrix<std::complex<double>>& data, const std::str
 
 int main()
 {
-    auto imageMatrix = GetMatrixFromImage(fs::path("../data/line-256-2.bmp"));
+    auto imageMatrix = GetMatrixFromImage(fs::path("../data/square-256.bmp"));
+    //auto imageMatrix = GetMatrixFromImage(fs::path("../data/dummy.bmp"));
+    //auto imageMatrix = GetMatrixFromImage(fs::path("../data/line-256-2.bmp"));
     const auto MN = imageMatrix.Raw().size();
     RecenterMatrixDataForFFT(imageMatrix);
 
     matrix<std::complex<double>> intermediate;
+#if USE_THREADS
+    imageMatrix = PFFT(imageMatrix, intermediate);
+#else
     imageMatrix = FFT(imageMatrix, intermediate);
+#endif
 
     WriteMatrixToImage(intermediate, "fwd-byRow.bmp");
     WriteMatrixToImage(imageMatrix, "fwd-out.bmp");
 
     imageMatrix.Transform([](const std::complex<double>& d) { return std::conj(d); });
+#if USE_THREADS
+    imageMatrix = PFFT(imageMatrix, intermediate);
+#else
     imageMatrix = FFT(imageMatrix, intermediate);
+#endif
 
     RecenterMatrixDataForFFT(intermediate);
     intermediate.Transform([&](const std::complex<double>& d)

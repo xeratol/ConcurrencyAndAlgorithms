@@ -1,8 +1,5 @@
 #include <algorithm>
 
-#define NDEBUG
-#include <cassert>
-
 #include "fft.h"
 
 const auto PI = 3.14159265359;
@@ -36,7 +33,6 @@ unsigned int RoundUpPowerOf2(unsigned int v)
 std::vector<unsigned int> GenBitReversal(unsigned int size)
 {
     const auto logOfSize = log2(size);
-    assert(isEqual(floor(logOfSize), logOfSize));
     std::vector<unsigned int> allReversed(size);
     const auto numBits = static_cast<unsigned int>(logOfSize);
 
@@ -72,7 +68,6 @@ std::vector<std::complex<double>> GenTwiddleFactors(unsigned int halfN)
 std::vector<std::complex<double>> ApplyButterfly(const std::vector<std::complex<double>>& data,
     const std::vector<std::complex<double>>& twiddle)
 {
-    assert(data.size() / 2 == twiddle.size());
     const auto N = data.size();
     std::vector<std::complex<double>> retVal(data);
     for (auto numElements = 2u; numElements <= N; numElements *= 2)
@@ -104,17 +99,27 @@ std::vector<std::complex<double>> ApplyButterfly(const std::vector<std::complex<
 /// Returns a Fourier-Transformed data, possibly resize to the next power of 2
 /// </summary>
 std::vector<std::complex<double>> FFT(const std::vector<std::complex<double>>& data,
+    const std::vector<unsigned int>& bitRev,
     const std::vector<std::complex<double>>& twiddle)
 {
-    std::vector<std::complex<double>> d(data.size());
-    const auto N = RoundUpPowerOf2(static_cast<unsigned int>(d.size()));
+    const auto N = RoundUpPowerOf2(static_cast<unsigned int>(data.size()));
 
-    if (d.size() < N)
+    if (twiddle.size() * 2 != N)
     {
-        d.resize(N);
+        throw std::exception("Invalid Twiddle Factors");
     }
 
-    const auto bitRev = GenBitReversal(N);
+    if (bitRev.size() != N)
+    {
+        throw std::exception("Invalid Bit Reversal Indices");
+    }
+
+    if (data.size() < N)
+    {
+        throw std::exception("data is not a power of 2");
+    }
+
+    std::vector<std::complex<double>> d(data.size());
     for (auto i = 0u; i < N; ++i)
     {
         d[i] = data[bitRev[i]];
@@ -130,6 +135,8 @@ matrix<std::complex<double>> FFT(const matrix<std::complex<double>>& data, matri
     const auto M = RoundUpPowerOf2(static_cast<unsigned int>(data.Height()));
     dataExtended.Resize(N, M);
 
+    const auto bitRevN = GenBitReversal(N);
+    const auto bitRevM = GenBitReversal(M);
     const auto twiddleN = GenTwiddleFactors(N / 2);
     const auto twiddleM = GenTwiddleFactors(M / 2);
 
@@ -137,14 +144,14 @@ matrix<std::complex<double>> FFT(const matrix<std::complex<double>>& data, matri
     for (auto y = 0u; y < M; ++y)
     {
         auto rowData = dataExtended.Row(y);
-        intermediate.Row(y, FFT(rowData, twiddleN));
+        intermediate.Row(y, FFT(rowData, bitRevN, twiddleN));
     }
 
     matrix<std::complex<double>> result(N, M);
     for (auto x = 0u; x < N; ++x)
     {
         auto colData = intermediate.Col(x);
-        result.Col(x, FFT(colData, twiddleM));
+        result.Col(x, FFT(colData, bitRevM, twiddleM));
     }
 
     return result;

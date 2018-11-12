@@ -18,11 +18,13 @@
     <ClInclude Include="fft.h" />
     <ClInclude Include="lodepng.h" />
     <ClInclude Include="matrix.h" />
+    <ClInclude Include="pfft.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="EasyBMP.cpp" />
     <ClCompile Include="fft.cpp" />
     <ClCompile Include="lodepng.cpp" />
+    <ClCompile Include="pfft.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
