@@ -41,6 +41,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Study16", "Study16\Study16.vcxproj", "{3D4C2683-B03E-4B9D-AA45-B2D19A82FB23}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Study17", "Study17\Study17.vcxproj", "{D3AEA8D7-C2DE-4D2D-95B7-D91D09CA95EA}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8CDE852F-8B59-496D-8C15-FB6A94D3CB7D} = {8CDE852F-8B59-496D-8C15-FB6A94D3CB7D}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Study18", "Study18\Study18.vcxproj", "{D8D1F604-3CDE-4E8F-BD09-C7283BF4AFC8}"
 	ProjectSection(ProjectDependencies) = postProject

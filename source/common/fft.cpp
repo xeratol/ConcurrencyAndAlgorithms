@@ -7,18 +7,15 @@
 
 const auto PI = 3.14159265359;
 
-template <typename T>
-bool isEqual(T a, T b)
+bool isEqual(double a, double b, double epsilon)
 {
-    T diff = a - b;
-    return (diff < std::numeric_limits<T>::epsilon() &&
-        -diff < std::numeric_limits<T>::epsilon());
+    double diff = a - b;
+    return (diff < epsilon && -diff < epsilon);
 }
 
-template <typename T>
-T RoundUpPowerOf2(T v)
+unsigned int RoundUpPowerOf2(unsigned int v)
 {
-    T ans = 1;
+    unsigned int ans = 1;
     auto numOnes = 0u;
     while (v)
     {
@@ -106,11 +103,11 @@ std::vector<std::complex<double>> ApplyButterfly(const std::vector<std::complex<
 /// <summary>
 /// Returns a Fourier-Transformed data, possibly resize to the next power of 2
 /// </summary>
-std::vector<std::complex<double>> FFT(const std::vector<std::complex<double>>& data)
+std::vector<std::complex<double>> FFT(const std::vector<std::complex<double>>& data,
+    const std::vector<std::complex<double>>& twiddle)
 {
     std::vector<std::complex<double>> d(data.size());
     const auto N = RoundUpPowerOf2(static_cast<unsigned int>(d.size()));
-    const auto halfN = N / 2;
 
     if (d.size() < N)
     {
@@ -123,7 +120,6 @@ std::vector<std::complex<double>> FFT(const std::vector<std::complex<double>>& d
         d[i] = data[bitRev[i]];
     }
 
-    const auto twiddle = GenTwiddleFactors(halfN);
     return ApplyButterfly(d, twiddle);
 }
 
@@ -134,18 +130,21 @@ matrix<std::complex<double>> FFT(const matrix<std::complex<double>>& data, matri
     const auto M = RoundUpPowerOf2(static_cast<unsigned int>(data.Height()));
     dataExtended.Resize(N, M);
 
+    const auto twiddleN = GenTwiddleFactors(N / 2);
+    const auto twiddleM = GenTwiddleFactors(M / 2);
+
     intermediate.Resize(N, M);
     for (auto y = 0u; y < M; ++y)
     {
         auto rowData = dataExtended.Row(y);
-        intermediate.Row(y, FFT(rowData));
+        intermediate.Row(y, FFT(rowData, twiddleN));
     }
 
     matrix<std::complex<double>> result(N, M);
     for (auto x = 0u; x < N; ++x)
     {
         auto colData = intermediate.Col(x);
-        result.Col(x, FFT(colData));
+        result.Col(x, FFT(colData, twiddleM));
     }
 
     return result;
