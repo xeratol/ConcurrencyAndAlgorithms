@@ -6,7 +6,7 @@ using UnityEngine;
 struct Patricle
 {
     public Vector3 pos;
-    public Vector3 dir;
+    public Vector3 vel;
     public float life;
 }
 
@@ -71,7 +71,7 @@ public class Study02Script : MonoBehaviour
         {
             var p = new Patricle();
             p.pos = Vector3.zero;
-            p.dir = UnityEngine.Random.onUnitSphere;
+            p.vel = UnityEngine.Random.onUnitSphere;
             p.life = UnityEngine.Random.Range(2.0f, 4.0f);
             particleData[i] = p;
         }

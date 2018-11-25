@@ -3,7 +3,7 @@
 struct Particle
 {
     float3 pos;
-    float3 dir;
+    float3 vel;
     float life;
 };
 
@@ -20,7 +20,7 @@ void CSMain (uint3 id : SV_DispatchThreadID)
         p.life = 4.0;
         p.pos = float3(0, 0, 0);
     }
-    p.pos += p.dir * dt;
+    p.pos += p.vel * dt;
 
     ParticleBuffer[id.x] = p;
 }
