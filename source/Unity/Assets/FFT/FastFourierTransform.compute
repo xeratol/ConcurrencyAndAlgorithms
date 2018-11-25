@@ -1,0 +1,70 @@
+﻿#pragma kernel Solve
+
+struct Complex
+{
+    double real;
+    double imag;
+};
+
+#define TEMP_SIZE 256                   // N is capped at TEMP_SIZE * 2
+uint N;                                 // power of 2
+StructuredBuffer<Complex> Src;          // size of N
+StructuredBuffer<uint> BitRev;          // size of N
+StructuredBuffer<Complex> Twiddle;      // size of N / 2
+RWStructuredBuffer<Complex> Dst;        // size of N
+
+Complex ComplexAdd(Complex a, Complex b)
+{
+    Complex sum;
+    sum.real = a.real + b.real;
+    sum.imag = a.imag + b.imag;
+    return sum;
+}
+
+Complex ComplexSub(Complex a, Complex b)
+{
+    Complex sum;
+    sum.real = a.real - b.real;
+    sum.imag = a.imag - b.imag;
+    return sum;
+}
+
+Complex ComplexMult(Complex a, Complex b)
+{
+    Complex prod;
+    prod.real = (a.real * b.real) - (a.imag * b.imag);
+    prod.imag = (a.real * b.imag) + (a.imag * b.real);
+    return prod;
+}
+
+[numthreads(1,1,1)]
+void Solve (uint groupIdx : SV_GroupIndex)
+{
+    Complex temp[TEMP_SIZE];
+
+    // assign bit reversed
+    for (uint i = 0; i < N; ++i)
+    {
+        Dst[i] = Src[BitRev[i]];
+    }
+
+    // apply butterfly
+    for (uint numElements = 2; numElements <= N; numElements *= 2)
+    {
+        for (uint offset = 0; offset < N; offset += numElements)
+        {
+            for (uint j = 0; j < numElements; ++j)
+            {
+                temp[j] = Dst[offset + j];
+            }
+
+            uint halfNumElements = numElements / 2;
+            for (uint i = 0; i < halfNumElements; ++i)
+            {
+                Complex upperHalf = ComplexMult(temp[i + halfNumElements], Twiddle[i * N / numElements]);
+                Dst[i + offset]                   = ComplexAdd(temp[i], upperHalf);
+                Dst[i + offset + halfNumElements] = ComplexSub(temp[i], upperHalf);
+            }
+        }
+    }
+}

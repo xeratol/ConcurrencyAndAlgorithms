@@ -280,9 +280,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 2085519330}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1dc699db73eedbd439afff6a7dd245eb, type: 3}
+  m_Script: {fileID: 11500000, guid: 0eb2de1905492204da8b31bc72e463df, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _shader: {fileID: 7200000, guid: dc11e0f09a1753e41ae1e7f8040a6def, type: 3}
 --- !u!4 &2085519332
 Transform:
   m_ObjectHideFlags: 0

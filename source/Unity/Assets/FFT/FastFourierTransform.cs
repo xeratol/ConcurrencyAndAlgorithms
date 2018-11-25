@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
-using UnityEngine;
 
 public class FastFourierTransform
 {
@@ -63,14 +62,10 @@ public class FastFourierTransform
     {
         var N = data.Count;
         List<Complex> retVal = new List<Complex>(data);
-        //Debug.Log(retVal.Count);
         for (var numElements = 2; numElements <= N; numElements *= 2)
         {
-            //Debug.Log("numElements: " + numElements);
             for (var offset = 0; offset < N; offset += numElements)
             {
-                // copy data to temp first
-                //Debug.Log("offset: " + offset);
                 List <Complex> temp = retVal.GetRange(offset, numElements);
 
                 var halfNumElements = numElements / 2;
