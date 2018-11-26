@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,34 +8,10 @@ public class FastFourierTransformGPUTester : MonoBehaviour
     public ComputeShader _shader;
     int _kernelHandle;
 
-    private struct Complex
+    private struct SimpleComplex
     {
         public double real;
         public double imag;
-
-        public Complex(double r = 0, double i = 0)
-        {
-            real = r;
-            imag = i;
-        }
-
-        public static implicit operator Complex(int r)
-        {
-            return new Complex(r);
-        }
-
-        public double Magnitude
-        {
-            get
-            {
-                return Math.Sqrt(real * real + imag * imag);
-            }
-        }
-
-        public string ToString(string format = "")
-        {
-            return string.Format("({0}, {1})", real.ToString(format), imag.ToString(format));
-        }
     }
 
     private void Awake()
@@ -56,7 +33,7 @@ public class FastFourierTransformGPUTester : MonoBehaviour
             new List<Complex>{ 2, 0, 2, 0 },
             new List<Complex>{ 2, new Complex(1, -1), 0, new Complex(1, 1) },
             new List<Complex>{ 22, 0, new Complex(-6, 4), 0, -2, 0, new Complex(- 6, -4), 0 },
-            new List<Complex>{ 36, new Complex(-4.0f, 9.65f), new Complex(-4, 4), new Complex(-4f, 1.65f), -4, new Complex(-4f, -1.65f), new Complex(-4, -4), new Complex(-4f, -9.65f) },
+            new List<Complex>{ 36, new Complex(-4, 9.65), new Complex(-4, 4), new Complex(-4, 1.65), -4, new Complex(-4, -1.65), new Complex(-4, -4), new Complex(-4, -9.65) },
         };
 
         for (int i = 0; i < inputs.Count; ++i)
@@ -89,7 +66,7 @@ public class FastFourierTransformGPUTester : MonoBehaviour
         _shader.SetBuffer(_kernelHandle, "BitRev", bitRev);
 
         var twiddleRaw = FastFourierTransform.GenTwiddleFactors((uint)N / 2);
-        var twiddleArray = new Complex[(uint)N / 2];
+        var twiddleArray = new SimpleComplex[(uint)N / 2];
         for (var i = 0; i < N / 2; ++i)
         {
             twiddleArray[i].real = twiddleRaw[i].Real;
