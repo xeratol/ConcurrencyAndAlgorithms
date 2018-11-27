@@ -53,6 +53,14 @@ float ComplexMagnitude(Complex a)
     return sqrt(a.real * a.real + a.imag * a.imag);
 }
 
+Complex ComplexConjugate(Complex a)
+{
+    Complex b;
+    b.real = a.real;
+    b.imag = -a.imag;
+    return b;
+}
+
 [numthreads(1, 8, 1)]
 void SolveRow (uint3 id : SV_DispatchThreadID)
 {
@@ -63,11 +71,14 @@ void SolveRow (uint3 id : SV_DispatchThreadID)
     {
         uint2 pos = uint2(BitRevRow[i], id.y);
         float data = (Src[pos].r + Src[pos].g + Src[pos].b) / 3.0;
-        /*if ((i + id.y) & 1 == 1)
+        if ((BitRevRow[i] + id.y) % 2 == 1)
         {
-            data = -data;
-        }*/
-        Intermediate[offsetByRow + i].real = data;
+            Intermediate[offsetByRow + i].real = -data;
+        }
+        else
+        {
+            Intermediate[offsetByRow + i].real = data;
+        }
         Intermediate[offsetByRow + i].imag = 0;
     }
 
@@ -93,12 +104,44 @@ void SolveRow (uint3 id : SV_DispatchThreadID)
     for (uint j = 0; j < WIDTH; ++j)
     {
         float val = ComplexMagnitude(Intermediate[offsetByRow + j]);
-        val = log10(val * 100 + 1) / 3;
+        val = log10(val * 1000 + 1) / 6;
         IntermediateTexture[uint2(j, id.y)] = float3(val, val, val);
     }
 }
 
 [numthreads(8, 1, 1)]
-void SolveCol(uint col : SV_GroupIndex)
+void SolveCol(uint3 id : SV_DispatchThreadID)
 {
+    Complex temp[TEMP_SIZE];
+
+    for (uint i = 0; i < HEIGHT; ++i)
+    {
+        Final[(i * WIDTH) + id.x] = Intermediate[(BitRevCol[i] * WIDTH) + id.x];
+    }
+
+    for (uint numElements = 2; numElements <= HEIGHT; numElements *= 2)
+    {
+        for (uint offset = 0; offset < HEIGHT; offset += numElements)
+        {
+            for (uint j = 0; j < numElements; ++j)
+            {
+                temp[j] = Final[((offset + j) * WIDTH) + id.x];
+            }
+
+            uint halfNumElements = numElements / 2;
+            for (uint i = 0; i < halfNumElements; ++i)
+            {
+                Complex upperHalf = ComplexMult(temp[i + halfNumElements], TwiddleCol[i * HEIGHT / numElements]);
+                Final[((i + offset) * WIDTH) + id.x] = ComplexAdd(temp[i], upperHalf);
+                Final[((i + offset + halfNumElements) * WIDTH) + id.x] = ComplexSub(temp[i], upperHalf);
+            }
+        }
+    }
+
+    for (uint j = 0; j < HEIGHT; ++j)
+    {
+        float val = ComplexMagnitude(Final[(j * WIDTH) + id.x]);
+        val = log10(val * 1000 + 1) / 6;
+        FinalTexture[uint2(id.x, j)] = float3(val, val, val);
+    }
 }

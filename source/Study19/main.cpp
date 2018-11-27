@@ -1,6 +1,7 @@
 #include <iostream>
 #include <filesystem>
 #include <chrono>
+#include <algorithm>
 
 #include "EasyBMP.h"
 #include "matrix.h"
@@ -41,7 +42,7 @@ BMP ConvertFromMatrix(const matrix<double>& data)
     {
         for (auto x = 0; x < data.Width(); ++x)
         {
-            const auto val = data.At(x, y) * 255.0;
+            const auto val = std::clamp(data.At(x, y), 0.0, 1.0) * 255.0;
             const auto gray = static_cast<unsigned char>(val);
             image.SetPixel(x, y, { gray, gray, gray, 255 });
         }
@@ -95,7 +96,7 @@ void CleanUpDataForImageWriting(matrix<double>& data)
 {
     data.Transform([](const double& el)
     {
-        return log(el * 1000.0 + 1)/log(1000.0 + 1);
+        return log(el * 10.0 + 1) / log(1000.0);
     });
 
     data.Normalize();
@@ -125,9 +126,10 @@ void WriteMatrixToImage(const matrix<std::complex<double>>& data, const std::str
 int main()
 {
     
-    auto imageMatrix = GetMatrixFromImage(fs::path("../data/small-satellite-4096-2048.bmp")); // 4096x2048
+    //auto imageMatrix = GetMatrixFromImage(fs::path("../data/small-satellite-4096-2048.bmp")); // 4096x2048
     //auto imageMatrix = GetMatrixFromImage(fs::path("../data/NGC-7635-gray.bmp")); // 1024x1024
     //auto imageMatrix = GetMatrixFromImage(fs::path("../data/square-256.bmp")); // 256x256
+    auto imageMatrix = GetMatrixFromImage(fs::path("../data/square-256-128.bmp")); // 256x128
     //auto imageMatrix = GetMatrixFromImage(fs::path("../data/line-256-2.bmp")); // 256x32
     const auto MN = imageMatrix.Raw().size();
     RecenterMatrixDataForFFT(imageMatrix);

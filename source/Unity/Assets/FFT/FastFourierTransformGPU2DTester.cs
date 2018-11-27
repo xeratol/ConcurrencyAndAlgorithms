@@ -6,7 +6,12 @@ public class FastFourierTransformGPU2DTester : MonoBehaviour
 {
     public ComputeShader _shader;
     private int _rowKernelHandle;
-    //private int _colKernelHandle;
+    private int _colKernelHandle;
+
+    ComputeBuffer _bitRevRow;
+    ComputeBuffer _bitRevCol;
+    ComputeBuffer _twiddleRow;
+    ComputeBuffer _twiddleCol;
 
     public Texture2D _source;
     private ComputeBuffer _intermediateBuffer;
@@ -26,8 +31,10 @@ public class FastFourierTransformGPU2DTester : MonoBehaviour
 
     private void Awake()
     {
+        var timeStart = Time.time;
+
         _rowKernelHandle = _shader.FindKernel("SolveRow");
-        //_colKernelHandle = _shader.FindKernel("SolveCol");
+        _colKernelHandle = _shader.FindKernel("SolveCol");
 
         var WIDTH = _source.width; // should be power of 2
         _shader.SetInt("WIDTH", WIDTH);
@@ -39,49 +46,88 @@ public class FastFourierTransformGPU2DTester : MonoBehaviour
         Debug.Log("Height: " + HEIGHT);
 
         _sourceRenderer.material.mainTexture = _source;
-
-        ComputeBuffer bitRev = new ComputeBuffer(WIDTH, sizeof(uint), ComputeBufferType.Default);
-        bitRev.SetData(FastFourierTransform.GenBitReversal((uint)WIDTH).ToArray());
-        _shader.SetBuffer(_rowKernelHandle, "BitRevRow", bitRev);
-
-        var twiddleRaw = FastFourierTransform.GenTwiddleFactors((uint)WIDTH / 2);
-        var twiddleArray = new SimpleComplex[(uint)WIDTH / 2];
-        for (var i = 0; i < WIDTH / 2; ++i)
-        {
-            twiddleArray[i].real = twiddleRaw[i].Real;
-            twiddleArray[i].imag = twiddleRaw[i].Imaginary;
-        }
-        ComputeBuffer twiddle = new ComputeBuffer(WIDTH / 2, sizeof(double) * 2, ComputeBufferType.Default);
-        twiddle.SetData(twiddleArray);
-        _shader.SetBuffer(_rowKernelHandle, "TwiddleRow", twiddle);
-
         _shader.SetTexture(_rowKernelHandle, "Src", _source);
 
-        var intermediateData = new SimpleComplex[WIDTH * HEIGHT];
-        _intermediateBuffer = new ComputeBuffer(WIDTH * HEIGHT, sizeof(double) * 2, ComputeBufferType.Default);
-        _intermediateBuffer.SetData(intermediateData);
-        _shader.SetBuffer(_rowKernelHandle, "Intermediate", _intermediateBuffer);
+        _bitRevRow = CreateBitRevBuffer((uint)WIDTH);
+        _shader.SetBuffer(_rowKernelHandle, "BitRevRow", _bitRevRow);
+        _bitRevCol = CreateBitRevBuffer((uint)HEIGHT);
+        _shader.SetBuffer(_colKernelHandle, "BitRevCol", _bitRevCol);
 
-        _intermediateTexture = new RenderTexture(WIDTH, HEIGHT, 24);
-        _intermediateTexture.useMipMap = false;
-        _intermediateTexture.filterMode = FilterMode.Point;
-        _intermediateTexture.enableRandomWrite = true;
-        _intermediateTexture.Create();
+        _twiddleRow = CreateTwiddleBuffer((uint)WIDTH / 2);
+        _shader.SetBuffer(_rowKernelHandle, "TwiddleRow", _twiddleRow);
+        _twiddleCol = CreateTwiddleBuffer((uint)HEIGHT / 2);
+        _shader.SetBuffer(_colKernelHandle, "TwiddleCol", _twiddleCol);
+
+        _intermediateBuffer = CreateComplexBuffer(WIDTH, HEIGHT);
+        _shader.SetBuffer(_rowKernelHandle, "Intermediate", _intermediateBuffer);
+        _shader.SetBuffer(_colKernelHandle, "Intermediate", _intermediateBuffer);
+
+        _finalBuffer = CreateComplexBuffer(WIDTH, HEIGHT);
+        _shader.SetBuffer(_colKernelHandle, "Final", _finalBuffer);
+
+        _intermediateTexture = CreateRenderTexture(WIDTH, HEIGHT);
         _shader.SetTexture(_rowKernelHandle, "IntermediateTexture", _intermediateTexture);
+        _finalTexture = CreateRenderTexture(WIDTH, HEIGHT);
+        _shader.SetTexture(_colKernelHandle, "FinalTexture", _finalTexture);
 
         _shader.Dispatch(_rowKernelHandle, 1, HEIGHT / 8, 1);
+        _shader.Dispatch(_colKernelHandle, WIDTH / 8, 1, 1);
 
         _intermediateRenderer.material.mainTexture = _intermediateTexture;
+        _finalRenderer.material.mainTexture = _finalTexture;
 
-        _intermediateBuffer.GetData(intermediateData);
-
-        bitRev.Release();
-        twiddle.Release();
-        _intermediateBuffer.Release();
+        Debug.Log("Duration: " + (Time.time - timeStart).ToString("0.000"));
     }
 
     private void OnDestroy()
     {
+        _bitRevRow.Release();
+        _bitRevCol.Release();
+        _twiddleRow.Release();
+        _twiddleCol.Release();
+
+        _intermediateBuffer.Release();
         _intermediateTexture.Release();
+        _finalBuffer.Release();
+        _finalTexture.Release();
+    }
+
+    ComputeBuffer CreateBitRevBuffer(uint N)
+    {
+        ComputeBuffer bitRev = new ComputeBuffer((int)N, sizeof(uint), ComputeBufferType.Default);
+        bitRev.SetData(FastFourierTransform.GenBitReversal(N).ToArray());
+        return bitRev;
+    }
+
+    ComputeBuffer CreateTwiddleBuffer(uint halfN)
+    {
+        var twiddleRaw = FastFourierTransform.GenTwiddleFactors(halfN);
+        var twiddleArray = new SimpleComplex[halfN];
+        for (var i = 0; i < halfN; ++i)
+        {
+            twiddleArray[i].real = twiddleRaw[i].Real;
+            twiddleArray[i].imag = twiddleRaw[i].Imaginary;
+        }
+        ComputeBuffer twiddle = new ComputeBuffer((int)halfN, sizeof(double) * 2, ComputeBufferType.Default);
+        twiddle.SetData(twiddleArray);
+        return twiddle;
+    }
+
+    ComputeBuffer CreateComplexBuffer(int width, int height)
+    {
+        ComputeBuffer buffer = new ComputeBuffer(width * height, sizeof(double) * 2, ComputeBufferType.Default);
+        buffer.SetData(new SimpleComplex[width * height]);
+        return buffer;
+    }
+
+    RenderTexture CreateRenderTexture(int width, int height)
+    {
+        RenderTexture tex = new RenderTexture(width, height, 24);
+        tex.useMipMap = false;
+        tex.wrapMode = TextureWrapMode.Clamp;
+        tex.filterMode = FilterMode.Point;
+        tex.enableRandomWrite = true;
+        tex.Create();
+        return tex;
     }
 }
