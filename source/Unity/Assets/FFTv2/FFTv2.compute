@@ -1,0 +1,162 @@
+﻿#pragma kernel ConvertTexToComplex
+#pragma kernel ConvertComplexMagToTex
+#pragma kernel ConvertComplexPhaseToTex
+#pragma kernel CenterComplex
+#pragma kernel BitRevByRow
+#pragma kernel BitRevByCol
+#pragma kernel ButterflyByRow
+#pragma kernel ButterflyByCol
+
+#define GROUP_SIZE_X 16
+#define GROUP_SIZE_Y 16
+
+struct Complex
+{
+    float real;
+    float imag;
+};
+
+uint WIDTH;                             // power of 2
+StructuredBuffer<uint> BitRevRow;       // size of WIDTH
+StructuredBuffer<Complex> TwiddleRow;   // size of WIDTH / 2
+
+uint HEIGHT;                            // power of 2
+StructuredBuffer<uint> BitRevCol;       // size of HEIGHT
+StructuredBuffer<Complex> TwiddleCol;   // size of HEIGHT / 2
+
+uint BUTTERFLY_STRIDE;                  // 2, 4, 8, 16, ..., WIDTH (or HEIGHT)
+
+// dimensions are WIDTH x HEIGHT
+Texture2D<float3> SrcTex;
+StructuredBuffer<Complex> Src;          // 1D buffer to represent 2D data
+RWTexture2D<float3> DstTex;
+RWStructuredBuffer<Complex> Dst;        // 1D buffer to represent 2D data
+
+Complex ComplexAdd(Complex a, Complex b)
+{
+    Complex sum;
+    sum.real = a.real + b.real;
+    sum.imag = a.imag + b.imag;
+    return sum;
+}
+
+Complex ComplexSub(Complex a, Complex b)
+{
+    Complex sum;
+    sum.real = a.real - b.real;
+    sum.imag = a.imag - b.imag;
+    return sum;
+}
+
+Complex ComplexMult(Complex a, Complex b)
+{
+    Complex prod;
+    prod.real = (a.real * b.real) - (a.imag * b.imag);
+    prod.imag = (a.real * b.imag) + (a.imag * b.real);
+    return prod;
+}
+
+float ComplexMagnitude(Complex a)
+{
+    return sqrt(a.real * a.real + a.imag * a.imag);
+}
+
+float ComplexPhase(Complex a)
+{
+    return atan2(a.imag, a.real);
+}
+
+Complex ComplexConjugate(Complex a)
+{
+    Complex b;
+    b.real = a.real;
+    b.imag = -a.imag;
+    return b;
+}
+
+[numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
+void ConvertTexToComplex(uint3 id : SV_DispatchThreadID)
+{
+    float real = (SrcTex[id.xy].r + SrcTex[id.xy].g + SrcTex[id.xy].b) / 3.0f;
+    Dst[id.y * WIDTH + id.x].real = real;
+    Dst[id.y * WIDTH + id.x].imag = 0;
+}
+
+[numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
+void ConvertComplexMagToTex(uint3 id : SV_DispatchThreadID)
+{
+    float val = ComplexMagnitude(Src[id.y * WIDTH + id.x]);
+    val = log10(val * 1000 + 1) / 6;
+    DstTex[id.xy] = float3(val, val, val);
+}
+
+[numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
+void ConvertComplexPhaseToTex(uint3 id : SV_DispatchThreadID)
+{
+    // TODO
+}
+
+[numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
+void CenterComplex(uint3 id : SV_DispatchThreadID)
+{
+    uint pos = id.y * WIDTH + id.x;
+    if ( ( ( id.x + id.y ) % 2 ) == 1)
+    {
+        Dst[pos].real = -Src[pos].real;
+        Dst[pos].imag = -Src[pos].imag;
+    }
+    else
+    {
+        Dst[pos].real = Src[pos].real;
+        Dst[pos].imag = Src[pos].imag;
+    }
+}
+
+[numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
+void ConjugateComplex(uint3 id : SV_DispatchThreadID)
+{
+    uint pos = id.y * WIDTH + id.x;
+    Dst[pos].real = Src[pos].real;
+    Dst[pos].imag = -Src[pos].imag;
+}
+
+[numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
+void BitRevByRow(uint3 id : SV_DispatchThreadID)
+{
+    uint srcPos = id.y * WIDTH + BitRevRow[id.x];
+    uint dstPos = id.y * WIDTH + id.x;
+    Dst[dstPos] = Src[srcPos];
+}
+
+[numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
+void BitRevByCol(uint3 id : SV_DispatchThreadID)
+{
+    uint srcPos = BitRevCol[id.y] * WIDTH + id.x;
+    uint dstPos = id.y * WIDTH + id.x;
+    Dst[dstPos] = Src[srcPos];
+}
+
+[numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
+void ButterflyByRow(uint3 id : SV_DispatchThreadID)
+{
+    const uint halfStride = BUTTERFLY_STRIDE / 2;
+    uint grp    = id.x / BUTTERFLY_STRIDE;
+    uint grpIdx = id.x % BUTTERFLY_STRIDE;
+    uint offset = grp * BUTTERFLY_STRIDE;
+    Complex twiddle = TwiddleRow[grpIdx * WIDTH / BUTTERFLY_STRIDE];
+
+    if (grpIdx < halfStride)
+    {
+
+    }
+    else
+    {
+
+    }
+}
+
+[numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
+void ButterflyByCol(uint3 id : SV_DispatchThreadID)
+{
+
+}

@@ -14,8 +14,8 @@ StructuredBuffer<uint> BitRevRow;       // size of WIDTH
 StructuredBuffer<Complex> TwiddleRow;   // size of WIDTH / 2
 
 uint HEIGHT;                            // power of 2
-StructuredBuffer<uint> BitRevCol;       // size of WIDTH
-StructuredBuffer<Complex> TwiddleCol;   // size of WIDTH / 2
+StructuredBuffer<uint> BitRevCol;       // size of HEIGHT
+StructuredBuffer<Complex> TwiddleCol;   // size of HEIGHT / 2
 
 // dimensions are WIDTH x HEIGHT
 Texture2D<float3> Src;
