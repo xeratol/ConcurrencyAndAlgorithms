@@ -2,6 +2,8 @@
 #pragma kernel ConvertComplexMagToTex
 #pragma kernel ConvertComplexPhaseToTex
 #pragma kernel CenterComplex
+#pragma kernel ConjugateComplex
+#pragma kernel DivideComplexByDimensions
 #pragma kernel BitRevByRow
 #pragma kernel BitRevByCol
 #pragma kernel ButterflyByRow
@@ -24,7 +26,7 @@ int HEIGHT;                             // power of 2
 StructuredBuffer<uint> BitRevCol;       // size of HEIGHT
 StructuredBuffer<Complex> TwiddleCol;   // size of HEIGHT / 2
 
-uint BUTTERFLY_STRIDE;                   // 2, 4, 8, 16, ..., WIDTH (or HEIGHT)
+uint BUTTERFLY_STRIDE;                   // 2, 4, 8, 16, ..., up to WIDTH (or HEIGHT)
 
 // dimensions are WIDTH x HEIGHT
 Texture2D<float3> SrcTex;
@@ -76,9 +78,9 @@ Complex ComplexConjugate(Complex a)
 
 /*
     Needs the following:
-        WIDTH
-        SrcTex
-        Dst
+        WIDTH (read)
+        SrcTex (read)
+        Dst (write)
 */
 [numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
 void ConvertTexToComplex(uint3 id : SV_DispatchThreadID)
@@ -90,9 +92,9 @@ void ConvertTexToComplex(uint3 id : SV_DispatchThreadID)
 
 /*
     Needs the following:
-        WIDTH
-        Src
-        DstTex
+        WIDTH (read)
+        Src (read)
+        DstTex (write)
 */
 [numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
 void ConvertComplexMagToTex(uint3 id : SV_DispatchThreadID)
@@ -116,9 +118,9 @@ void ConvertComplexPhaseToTex(uint3 id : SV_DispatchThreadID)
 
 /*
     Needs the following:
-        WIDTH
-        Src
-        Dst
+        WIDTH (read)
+        Src (read)
+        Dst (write)
 */
 [numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
 void CenterComplex(uint3 id : SV_DispatchThreadID)
@@ -138,9 +140,9 @@ void CenterComplex(uint3 id : SV_DispatchThreadID)
 
 /*
     Needs the following:
-        WIDTH
-        Src
-        Dst
+        WIDTH (read)
+        Src (read)
+        Dst (write)
 */
 [numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
 void ConjugateComplex(uint3 id : SV_DispatchThreadID)
@@ -152,10 +154,26 @@ void ConjugateComplex(uint3 id : SV_DispatchThreadID)
 
 /*
     Needs the following:
-        WIDTH
-        BitRevRow
-        Src
-        Dst
+        WIDTH (read)
+        HEIGHT (read)
+        Src (read)
+        Dst (write)
+*/
+[numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
+void DivideComplexByDimensions(uint3 id : SV_DispatchThreadID)
+{
+    uint pos = id.y * WIDTH + id.x;
+    float dimProd = WIDTH * HEIGHT;
+    Dst[pos].real = Src[pos].real / dimProd;
+    Dst[pos].imag = Src[pos].imag / dimProd;
+}
+
+/*
+    Needs the following:
+        WIDTH (read)
+        BitRevRow (read)
+        Src (read)
+        Dst (write)
 */
 [numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
 void BitRevByRow(uint3 id : SV_DispatchThreadID)
@@ -167,10 +185,10 @@ void BitRevByRow(uint3 id : SV_DispatchThreadID)
 
 /*
     Needs the following:
-        WIDTH
-        BitRevCol
-        Src
-        Dst
+        WIDTH (read)
+        BitRevCol (read)
+        Src (read)
+        Dst (write)
 */
 [numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
 void BitRevByCol(uint3 id : SV_DispatchThreadID)
@@ -182,20 +200,20 @@ void BitRevByCol(uint3 id : SV_DispatchThreadID)
 
 /*
     Needs the following:
-        WIDTH
-        BUTTERFLY_STRIDE
-        TwiddleRow
-        Src
-        Dst
+        WIDTH (read)
+        BUTTERFLY_STRIDE (read)
+        TwiddleRow (read)
+        Src (read)
+        Dst (write)
 */
 [numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
 void ButterflyByRow(uint3 id : SV_DispatchThreadID)
 {
-    const uint grp    = id.x / BUTTERFLY_STRIDE;
-    const uint grpIdx = id.x % BUTTERFLY_STRIDE;
-    const uint offset = grp * BUTTERFLY_STRIDE;
-    const uint halfStride = BUTTERFLY_STRIDE / 2;
-    const uint halfStrideIdx = grpIdx % halfStride;
+    const uint grp              = id.x / BUTTERFLY_STRIDE;
+    const uint grpIdx           = id.x % BUTTERFLY_STRIDE;
+    const uint offset           = grp * BUTTERFLY_STRIDE;
+    const uint halfStride       = BUTTERFLY_STRIDE / 2;
+    const uint halfStrideIdx    = grpIdx % halfStride;
 
     Complex a = Src[(id.y * WIDTH) + offset + halfStrideIdx];
     Complex b = Src[(id.y * WIDTH) + offset + halfStride + halfStrideIdx];
@@ -214,21 +232,21 @@ void ButterflyByRow(uint3 id : SV_DispatchThreadID)
 
 /*
     Needs the following:
-        WIDTH
-        HEIGHT
-        BUTTERFLY_STRIDE
-        TwiddleCol
-        Src
-        Dst
+        WIDTH (read)
+        HEIGHT (read)
+        BUTTERFLY_STRIDE (read)
+        TwiddleCol (read)
+        Src (read)
+        Dst (write)
 */
 [numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
 void ButterflyByCol(uint3 id : SV_DispatchThreadID)
 {
-    const uint grp = id.y / BUTTERFLY_STRIDE;
-    const uint grpIdx = id.y % BUTTERFLY_STRIDE;
-    const uint offset = grp * BUTTERFLY_STRIDE;
-    const uint halfStride = BUTTERFLY_STRIDE / 2;
-    const uint halfStrideIdx = grpIdx % halfStride;
+    const uint grp              = id.y / BUTTERFLY_STRIDE;
+    const uint grpIdx           = id.y % BUTTERFLY_STRIDE;
+    const uint offset           = grp * BUTTERFLY_STRIDE;
+    const uint halfStride       = BUTTERFLY_STRIDE / 2;
+    const uint halfStrideIdx    = grpIdx % halfStride;
 
     Complex a = Src[id.x + ( ( offset + halfStrideIdx ) * WIDTH )];
     Complex b = Src[id.x + ( ( offset + halfStride + halfStrideIdx ) * WIDTH )];
