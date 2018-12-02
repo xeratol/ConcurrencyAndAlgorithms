@@ -125,7 +125,7 @@ public class FastFourierTransformGPU2DTester : MonoBehaviour
         RenderTexture tex = new RenderTexture(width, height, 24);
         tex.useMipMap = false;
         tex.wrapMode = TextureWrapMode.Clamp;
-        tex.filterMode = FilterMode.Point;
+        tex.filterMode = FilterMode.Bilinear;
         tex.enableRandomWrite = true;
         tex.Create();
         return tex;
