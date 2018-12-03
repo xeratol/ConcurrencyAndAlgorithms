@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Diagnostics;
+using UnityEngine;
 
 public class FFTv2 : MonoBehaviour
 {
@@ -33,13 +35,27 @@ public class FFTv2 : MonoBehaviour
 
     private void Start()
     {
+        UnityEngine.Debug.Log(Stopwatch.IsHighResolution);
+        var sw = new Stopwatch();
+        
         _helper.Init(_source.width, _source.height);
         _helper.Load(_source);
         _helper.RecenterData();
+
+        sw.Start();
+
         _helper.Forward(_intermediateForward);
         _helper.GetMagnitudeSpectrumScaled(_finalForward);
+
+        sw.Stop();
+        UnityEngine.Debug.LogFormat("FFT Forward, Elapsed Time: {0}s", (float)sw.ElapsedTicks / TimeSpan.TicksPerSecond);
+        sw.Start();
+
         _helper.Inverse(_intermediateInverse);
         _helper.GetMagnitudeSpectrum(_finalInverse);
+
+        sw.Stop();
+        UnityEngine.Debug.LogFormat("FFT Inverse, Elapsed Time: {0}s", (float)sw.ElapsedTicks / TimeSpan.TicksPerSecond);
     }
 
     private void OnDestroy()
