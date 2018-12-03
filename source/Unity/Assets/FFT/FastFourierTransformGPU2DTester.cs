@@ -31,8 +31,6 @@ public class FastFourierTransformGPU2DTester : MonoBehaviour
 
     private void Awake()
     {
-        var timeStart = Time.time;
-
         _rowKernelHandle = _shader.FindKernel("SolveRow");
         _colKernelHandle = _shader.FindKernel("SolveCol");
 
@@ -42,10 +40,10 @@ public class FastFourierTransformGPU2DTester : MonoBehaviour
         var HEIGHT = _source.height; // should be power of 2
         _shader.SetInt("HEIGHT", HEIGHT);
 
-        Debug.Log("Width: " + WIDTH);
-        Debug.Log("Height: " + HEIGHT);
-
         _sourceRenderer.material.mainTexture = _source;
+        _intermediateRenderer.material.mainTexture = _intermediateTexture;
+        _finalRenderer.material.mainTexture = _finalTexture;
+
         _shader.SetTexture(_rowKernelHandle, "Src", _source);
 
         _bitRevRow = CreateBitRevBuffer((uint)WIDTH);
@@ -72,11 +70,6 @@ public class FastFourierTransformGPU2DTester : MonoBehaviour
 
         _shader.Dispatch(_rowKernelHandle, 1, HEIGHT / 8, 1);
         _shader.Dispatch(_colKernelHandle, WIDTH / 8, 1, 1);
-
-        _intermediateRenderer.material.mainTexture = _intermediateTexture;
-        _finalRenderer.material.mainTexture = _finalTexture;
-
-        Debug.Log("Duration: " + (Time.time - timeStart).ToString("0.000"));
     }
 
     private void OnDestroy()

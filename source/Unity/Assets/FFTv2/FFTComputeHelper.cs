@@ -1,14 +1,18 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class FFTComputeHelper
 {
     private ComputeShader _shader;
     const int GROUP_SIZE_X = 16;   // must match shader
     const int GROUP_SIZE_Y = 16;   // must match shader
+    private int _width;
+    private int _height;
 
     #region Kernel Handles
     private int _convertTexToComplexKernel;
     private int _convertComplexMagToTexKernel;
+    private int _convertComplexMagToTexScaledKernel;
     //private int _convertComplexPhaseToTexKernel;
     private int _centerComplexKernel;
     private int _conjugateComplexKernel;
@@ -32,13 +36,27 @@ public class FFTComputeHelper
     private ComputeBuffer _bufferB;
     #endregion
 
-    private int _width;
-    private int _height;
-
-    private struct SimpleComplex
+    [System.Diagnostics.DebuggerDisplay("{ToString()}")]
+    public struct ComplexF
     {
         public float real;
         public float imag;
+
+        public ComplexF(float r, float i = 0)
+        {
+            real = r;
+            imag = i;
+        }
+
+        public static implicit operator ComplexF(int r)
+        {
+            return new ComplexF(r);
+        }
+
+        public override string ToString()
+        {
+            return string.Format("({0}, {1})", real, imag);
+        }
     }
 
     public FFTComputeHelper(ComputeShader fftShader)
@@ -56,7 +74,8 @@ public class FFTComputeHelper
     public void Init(int width, int height)
     {
         if (FastFourierTransform.RoundUpPowerOf2((uint)width) != (uint)width ||
-            FastFourierTransform.RoundUpPowerOf2((uint)height) != (uint)height)
+            FastFourierTransform.RoundUpPowerOf2((uint)height) != (uint)height ||
+            width < GROUP_SIZE_X || height < GROUP_SIZE_Y)
         {
             throw new System.Exception("Invalid Parameters");
         }
@@ -79,69 +98,91 @@ public class FFTComputeHelper
         ReleaseTempBuffers();
     }
 
-    public void Forward(Texture2D source, RenderTexture final, RenderTexture intermediate = null)
+    public void Load(Texture2D source)
     {
-        if (source == null || source.width != _width || source.height != _height ||
-            final == null || final.width != _width || final.height != _height)
-        {
-            throw new System.Exception("Invalid Parameters");
-        }
-
-        if (intermediate != null && (intermediate.width != _width || intermediate.height != _height))
+        if (source == null || source.width != _width || source.height != _height)
         {
             throw new System.Exception("Invalid Parameters");
         }
 
         ConvertTexToComplex(source, _bufferA);
-        CenterComplex(_bufferA, _bufferB);
 
-        BitRevByRow(_bufferB, _bufferA);
-        ButterflyByRow(_bufferA, _bufferB);
-
-        if (intermediate != null)
-        {
-            ConvertComplexMagToTex(_bufferB, intermediate);
-        }
-
-        BitRevByCol(_bufferB, _bufferA);
-        ButterflyByCol(_bufferA, _bufferB);
-
-        ConvertComplexMagToTex(_bufferB, final);
-
-        // _bufferB contains the output of the FFT
+        // _bufferA contains data
     }
 
-    public void Inverse(RenderTexture final, RenderTexture intermediate = null)
+    public void Load(ComplexF [] data)
     {
-        if (final == null || final.width != _width || final.height != _height)
-        {
-            throw new System.Exception("Invalid Parameters");
-        }
+        _bufferA.SetData(data);
 
+        // _bufferA contains data
+    }
+
+    public void Save(ComplexF [] data)
+    {
+        _bufferA.GetData(data);
+    }
+
+    public void RecenterData()
+    {
+        // _bufferA should contain data
+        CenterComplex(_bufferA, _bufferB);
+        SwapBuffers(ref _bufferB, ref _bufferA);
+        // _bufferA contains data
+    }
+
+    public void GetMagnitudeSpectrum(RenderTexture tex)
+    {
+        // _bufferA should contain data
+        ConvertComplexMagToTex(_bufferA, tex);
+    }
+
+    public void GetMagnitudeSpectrumScaled(RenderTexture tex)
+    {
+        // _bufferA should contain data
+        ConvertComplexMagToTexScaled(_bufferA, tex);
+    }
+
+    public void Forward(RenderTexture intermediate = null)
+    {
         if (intermediate != null && (intermediate.width != _width || intermediate.height != _height))
         {
             throw new System.Exception("Invalid Parameters");
         }
 
-        // we assume that _bufferB contains the data from the Forward
-
-        ConjugateComplex(_bufferB, _bufferA);
+        // _bufferA should contain data
 
         BitRevByRow(_bufferA, _bufferB);
-        ButterflyByRow(_bufferB, _bufferA);
+        ButterflyByRow(ref _bufferB, ref _bufferA);
 
         if (intermediate != null)
         {
-            ConvertComplexMagToTex(_bufferB, intermediate);
+            ConvertComplexMagToTexScaled(_bufferA, intermediate);
         }
 
         BitRevByCol(_bufferA, _bufferB);
-        ButterflyByCol(_bufferB, _bufferA);
+        ButterflyByCol(ref _bufferB, ref _bufferA);
+
+        // _bufferA contains data
+    }
+
+    public void Inverse(RenderTexture intermediate = null)
+    {
+        if (intermediate != null && (intermediate.width != _width || intermediate.height != _height))
+        {
+            throw new System.Exception("Invalid Parameters");
+        }
+
+        // _bufferA should contain data
+
+        ConjugateComplex(_bufferA, _bufferB);
+        SwapBuffers(ref _bufferA, ref _bufferB);
+
+        Forward(intermediate);
 
         ConjugateComplex(_bufferA, _bufferB);
         DivideComplexByDimensions(_bufferB, _bufferA);
 
-        ConvertComplexMagToTex(_bufferB, final);
+        // _bufferA contains data
     }
 
     #region Init Methods
@@ -149,6 +190,7 @@ public class FFTComputeHelper
     {
         _convertTexToComplexKernel = _shader.FindKernel("ConvertTexToComplex");
         _convertComplexMagToTexKernel = _shader.FindKernel("ConvertComplexMagToTex");
+        _convertComplexMagToTexScaledKernel = _shader.FindKernel("ConvertComplexMagToTexScaled");
         //_convertComplexPhaseToTexKernel = _shader.FindKernel("ConvertComplexPhaseToTex");
         _centerComplexKernel = _shader.FindKernel("CenterComplex");
         _conjugateComplexKernel = _shader.FindKernel("ConjugateComplex");
@@ -182,7 +224,7 @@ public class FFTComputeHelper
     private static ComputeBuffer CreateTwiddleBuffer(uint halfN)
     {
         var twiddleRaw = FastFourierTransform.GenTwiddleFactors(halfN);
-        var twiddleArray = new SimpleComplex[halfN];
+        var twiddleArray = new ComplexF[halfN];
         for (var i = 0; i < halfN; ++i)
         {
             twiddleArray[i].real = (float)twiddleRaw[i].Real;
@@ -203,11 +245,11 @@ public class FFTComputeHelper
     private static ComputeBuffer CreateComplexBuffer(int width, int height)
     {
         ComputeBuffer buffer = new ComputeBuffer(width * height, sizeof(float) * 2, ComputeBufferType.Default);
-        buffer.SetData(new SimpleComplex[width * height]);
+        //buffer.SetData(new SimpleComplex[width * height]);
         return buffer;
     }
 
-    private void SwapBuffers(ComputeBuffer a, ComputeBuffer b)
+    private static void SwapBuffers(ref ComputeBuffer a, ref ComputeBuffer b)
     {
         ComputeBuffer c = a;
         a = b;
@@ -252,42 +294,42 @@ public class FFTComputeHelper
     }
 
     // Both src and dst will be modified
-    private void ButterflyByRow(ComputeBuffer src, ComputeBuffer dst)
+    private void ButterflyByRow(ref ComputeBuffer src, ref ComputeBuffer dst)
     {
         _shader.SetBuffer(_butterflyByRowKernel, "TwiddleRow", _twiddleRow);
-        var srcIsSrc = true; // TODO what a stupid name
+        var swapped = false;
         for (int stride = 2; stride <= _width; stride *= 2)
         {
             _shader.SetInt("BUTTERFLY_STRIDE", stride);
-            _shader.SetBuffer(_butterflyByRowKernel, "Src", srcIsSrc ? src : dst);
-            _shader.SetBuffer(_butterflyByRowKernel, "Dst", srcIsSrc ? dst : src);
+            _shader.SetBuffer(_butterflyByRowKernel, "Src", swapped ? dst : src);
+            _shader.SetBuffer(_butterflyByRowKernel, "Dst", swapped ? src : dst);
             Dispatch(_butterflyByRowKernel);
-            srcIsSrc = !srcIsSrc;
+            swapped = !swapped;
         }
 
-        if (srcIsSrc)
+        if (!swapped)
         {
-            SwapBuffers(src, dst);
+            SwapBuffers(ref src, ref dst);
         }
     }
 
     // Both src and dst will be modified
-    private void ButterflyByCol(ComputeBuffer src, ComputeBuffer dst)
+    private void ButterflyByCol(ref ComputeBuffer src, ref ComputeBuffer dst)
     {
         _shader.SetBuffer(_butterflyByColKernel, "TwiddleCol", _twiddleCol);
-        var srcIsSrc = true; // TODO what a stupid name
+        var swapped = false;
         for (int stride = 2; stride <= _height; stride *= 2)
         {
             _shader.SetInt("BUTTERFLY_STRIDE", stride);
-            _shader.SetBuffer(_butterflyByColKernel, "Src", srcIsSrc ? src : dst);
-            _shader.SetBuffer(_butterflyByColKernel, "Dst", srcIsSrc ? dst : src);
+            _shader.SetBuffer(_butterflyByColKernel, "Src", swapped ? dst : src);
+            _shader.SetBuffer(_butterflyByColKernel, "Dst", swapped ? src : dst);
             Dispatch(_butterflyByColKernel);
-            srcIsSrc = !srcIsSrc;
+            swapped = !swapped;
         }
 
-        if (srcIsSrc)
+        if (!swapped)
         {
-            SwapBuffers(src, dst);
+            SwapBuffers(ref src, ref dst);
         }
     }
 
@@ -297,7 +339,14 @@ public class FFTComputeHelper
         _shader.SetTexture(_convertComplexMagToTexKernel, "DstTex", dst);
         Dispatch(_convertComplexMagToTexKernel);
     }
-    
+
+    private void ConvertComplexMagToTexScaled(ComputeBuffer src, RenderTexture dst)
+    {
+        _shader.SetBuffer(_convertComplexMagToTexScaledKernel, "Src", src);
+        _shader.SetTexture(_convertComplexMagToTexScaledKernel, "DstTex", dst);
+        Dispatch(_convertComplexMagToTexScaledKernel);
+    }
+
     private void ConjugateComplex(ComputeBuffer src, ComputeBuffer dst)
     {
         _shader.SetBuffer(_conjugateComplexKernel, "Src", src);

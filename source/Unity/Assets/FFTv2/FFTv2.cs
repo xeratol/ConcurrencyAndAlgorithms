@@ -34,8 +34,12 @@ public class FFTv2 : MonoBehaviour
     private void Start()
     {
         _helper.Init(_source.width, _source.height);
-        _helper.Forward(_source, _finalForward, _intermediateForward);
-        _helper.Inverse(_finalInverse, _intermediateInverse);
+        _helper.Load(_source);
+        _helper.RecenterData();
+        _helper.Forward(_intermediateForward);
+        _helper.GetMagnitudeSpectrumScaled(_finalForward);
+        _helper.Inverse(_intermediateInverse);
+        _helper.GetMagnitudeSpectrum(_finalInverse);
     }
 
     private void OnDestroy()
@@ -51,7 +55,7 @@ public class FFTv2 : MonoBehaviour
         RenderTexture tex = new RenderTexture(width, height, 24);
         tex.useMipMap = false;
         tex.wrapMode = TextureWrapMode.Clamp;
-        tex.filterMode = FilterMode.Bilinear;
+        tex.filterMode = FilterMode.Point;
         tex.enableRandomWrite = true;
         tex.Create();
         return tex;

@@ -1,5 +1,6 @@
 ﻿#pragma kernel ConvertTexToComplex
 #pragma kernel ConvertComplexMagToTex
+#pragma kernel ConvertComplexMagToTexScaled
 #pragma kernel ConvertComplexPhaseToTex
 #pragma kernel CenterComplex
 #pragma kernel ConjugateComplex
@@ -26,7 +27,7 @@ int HEIGHT;                             // power of 2
 StructuredBuffer<uint> BitRevCol;       // size of HEIGHT
 StructuredBuffer<Complex> TwiddleCol;   // size of HEIGHT / 2
 
-uint BUTTERFLY_STRIDE;                   // 2, 4, 8, 16, ..., up to WIDTH (or HEIGHT)
+int BUTTERFLY_STRIDE;                   // 2, 4, 8, 16, ..., up to WIDTH (or HEIGHT)
 
 // dimensions are WIDTH x HEIGHT
 Texture2D<float3> SrcTex;
@@ -100,7 +101,20 @@ void ConvertTexToComplex(uint3 id : SV_DispatchThreadID)
 void ConvertComplexMagToTex(uint3 id : SV_DispatchThreadID)
 {
     float val = ComplexMagnitude(Src[id.y * WIDTH + id.x]);
-    val = log10(val * 1000 + 1) / 6;
+    DstTex[id.xy] = float3(val, val, val);
+}
+
+/*
+    Needs the following:
+        WIDTH (read)
+        Src (read)
+        DstTex (write)
+*/
+[numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
+void ConvertComplexMagToTexScaled(uint3 id : SV_DispatchThreadID)
+{
+    float val = ComplexMagnitude(Src[id.y * WIDTH + id.x]);
+    val = log10(val * 10.0 + 1) / 4;
     DstTex[id.xy] = float3(val, val, val);
 }
 
@@ -125,7 +139,7 @@ void ConvertComplexPhaseToTex(uint3 id : SV_DispatchThreadID)
 [numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
 void CenterComplex(uint3 id : SV_DispatchThreadID)
 {
-    uint pos = id.y * WIDTH + id.x;
+    uint pos = id.y * (uint)WIDTH + id.x;
     if ( ( ( id.x + id.y ) % 2 ) == 1)
     {
         Dst[pos].real = -Src[pos].real;
@@ -147,9 +161,8 @@ void CenterComplex(uint3 id : SV_DispatchThreadID)
 [numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
 void ConjugateComplex(uint3 id : SV_DispatchThreadID)
 {
-    uint pos = id.y * WIDTH + id.x;
-    Dst[pos].real = Src[pos].real;
-    Dst[pos].imag = -Src[pos].imag;
+    uint pos = id.y * (uint)WIDTH + id.x;
+    Dst[pos] = ComplexConjugate(Src[pos]);
 }
 
 /*
@@ -162,8 +175,8 @@ void ConjugateComplex(uint3 id : SV_DispatchThreadID)
 [numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
 void DivideComplexByDimensions(uint3 id : SV_DispatchThreadID)
 {
-    uint pos = id.y * WIDTH + id.x;
-    float dimProd = WIDTH * HEIGHT;
+    uint pos = id.y * (uint)WIDTH + id.x;
+    float dimProd = (float)WIDTH * (float)HEIGHT;
     Dst[pos].real = Src[pos].real / dimProd;
     Dst[pos].imag = Src[pos].imag / dimProd;
 }
@@ -178,8 +191,8 @@ void DivideComplexByDimensions(uint3 id : SV_DispatchThreadID)
 [numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
 void BitRevByRow(uint3 id : SV_DispatchThreadID)
 {
-    uint srcPos = id.y * WIDTH + BitRevRow[id.x];
-    uint dstPos = id.y * WIDTH + id.x;
+    uint srcPos = id.y * (uint)WIDTH + BitRevRow[id.x];
+    uint dstPos = id.y * (uint)WIDTH + id.x;
     Dst[dstPos] = Src[srcPos];
 }
 
@@ -193,8 +206,8 @@ void BitRevByRow(uint3 id : SV_DispatchThreadID)
 [numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
 void BitRevByCol(uint3 id : SV_DispatchThreadID)
 {
-    uint srcPos = BitRevCol[id.y] * WIDTH + id.x;
-    uint dstPos = id.y * WIDTH + id.x;
+    uint srcPos = BitRevCol[id.y] * (uint)WIDTH + id.x;
+    uint dstPos =            id.y * (uint)WIDTH + id.x;
     Dst[dstPos] = Src[srcPos];
 }
 
@@ -209,24 +222,26 @@ void BitRevByCol(uint3 id : SV_DispatchThreadID)
 [numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
 void ButterflyByRow(uint3 id : SV_DispatchThreadID)
 {
-    const uint grp              = id.x / BUTTERFLY_STRIDE;
-    const uint grpIdx           = id.x % BUTTERFLY_STRIDE;
-    const uint offset           = grp * BUTTERFLY_STRIDE;
-    const uint halfStride       = BUTTERFLY_STRIDE / 2;
+    const uint stride           = (uint)BUTTERFLY_STRIDE;
+    const uint grp              = id.x / stride;
+    const uint grpIdx           = id.x % stride;
+    const uint offset           = grp * stride;
+    const uint halfStride       = stride / 2;
     const uint halfStrideIdx    = grpIdx % halfStride;
 
-    Complex a = Src[(id.y * WIDTH) + offset + halfStrideIdx];
-    Complex b = Src[(id.y * WIDTH) + offset + halfStride + halfStrideIdx];
-    Complex twiddle = TwiddleRow[halfStrideIdx * WIDTH / BUTTERFLY_STRIDE];
-    Complex bTwiddle = ComplexMult(b, twiddle);
+    Complex a = Src[(id.y * (uint)WIDTH) + offset + halfStrideIdx];
+    Complex b = Src[(id.y * (uint)WIDTH) + offset + halfStride + halfStrideIdx];
+    Complex w = TwiddleRow[halfStrideIdx * (uint)WIDTH / stride];
+    Complex bw = ComplexMult(b, w);
 
+    uint dstPos = (id.y * (uint)WIDTH) + id.x;
     if (grpIdx < halfStride)
     {
-        Dst[(id.y * WIDTH) + id.x] = ComplexAdd(a, bTwiddle);
+        Dst[dstPos] = ComplexAdd(a, bw);
     }
     else
     {
-        Dst[(id.y * WIDTH) + id.x] = ComplexSub(a, bTwiddle);
+        Dst[dstPos] = ComplexSub(a, bw);
     }
 }
 
@@ -242,23 +257,24 @@ void ButterflyByRow(uint3 id : SV_DispatchThreadID)
 [numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
 void ButterflyByCol(uint3 id : SV_DispatchThreadID)
 {
-    const uint grp              = id.y / BUTTERFLY_STRIDE;
-    const uint grpIdx           = id.y % BUTTERFLY_STRIDE;
-    const uint offset           = grp * BUTTERFLY_STRIDE;
-    const uint halfStride       = BUTTERFLY_STRIDE / 2;
+    const uint stride           = (uint)BUTTERFLY_STRIDE;
+    const uint grp              = id.y / stride;
+    const uint grpIdx           = id.y % stride;
+    const uint offset           = grp * stride;
+    const uint halfStride       = stride / 2;
     const uint halfStrideIdx    = grpIdx % halfStride;
 
-    Complex a = Src[id.x + ( ( offset + halfStrideIdx ) * WIDTH )];
-    Complex b = Src[id.x + ( ( offset + halfStride + halfStrideIdx ) * WIDTH )];
-    Complex twiddle = TwiddleCol[halfStrideIdx * HEIGHT / BUTTERFLY_STRIDE];
-    Complex bTwiddle = ComplexMult(b, twiddle);
+    Complex a = Src[id.x + ( ( offset + halfStrideIdx ) * (uint)WIDTH )];
+    Complex b = Src[id.x + ( ( offset + halfStride + halfStrideIdx ) * (uint)WIDTH )];
+    Complex w = TwiddleCol[halfStrideIdx * (uint)HEIGHT / stride];
+    Complex bw = ComplexMult(b, w);
 
     if (grpIdx < halfStride)
     {
-        Dst[(id.y * WIDTH) + id.x] = ComplexAdd(a, bTwiddle);
+        Dst[(id.y * (uint)WIDTH) + id.x] = ComplexAdd(a, bw);
     }
     else
     {
-        Dst[(id.y * WIDTH) + id.x] = ComplexSub(a, bTwiddle);
+        Dst[(id.y * (uint)WIDTH) + id.x] = ComplexSub(a, bw);
     }
 }
