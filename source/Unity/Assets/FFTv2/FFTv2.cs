@@ -36,12 +36,12 @@ public class FFTv2 : MonoBehaviour
     private void Start()
     {
         UnityEngine.Debug.Log(Stopwatch.IsHighResolution);
-        var sw = new Stopwatch();
         
         _helper.Init(_source.width, _source.height);
         _helper.Load(_source);
         _helper.RecenterData();
 
+        var sw = new Stopwatch();
         sw.Start();
 
         _helper.Forward(_intermediateForward);

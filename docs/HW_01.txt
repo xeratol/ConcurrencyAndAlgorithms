@@ -39,3 +39,9 @@ Compute Shaders - Particle System
 Parallel FFT on GPU
 
 ----
+
+Compare Complex Float with Complex Double reconstructed images or raw complex data
+Batch run to get execution times
+Investigate DispatchIndirect
+Upload All Sources, Test Images, Final Report to Moodle
+Add README for Unity Project
