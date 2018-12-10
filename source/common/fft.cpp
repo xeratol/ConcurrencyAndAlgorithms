@@ -84,10 +84,11 @@ std::vector<std::complex<double>> ApplyButterfly(const std::vector<std::complex<
             unsigned int halfNumElements = numElements / 2;
             for (auto i = 0u; i < halfNumElements; ++i)
             {
+                const auto b = temp[i + halfNumElements] * twiddle[i * N / numElements];
                 //std::cout << "  [" << i << "]: "                   << temp[i] << " + " << temp[i + halfNumElements] << " * " << twiddle[i * N / numElements] << std::endl;
-                retVal[i + offset]                   = temp[i] + temp[i + halfNumElements] * twiddle[i * N / numElements];
+                retVal[i + offset]                   = temp[i] + b;
                 //std::cout << "  [" << i + halfNumElements << "]: " << temp[i] << " - " << temp[i + halfNumElements] << " * " << twiddle[i * N / numElements] << std::endl;
-                retVal[i + offset + halfNumElements] = temp[i] - temp[i + halfNumElements] * twiddle[i * N / numElements];
+                retVal[i + offset + halfNumElements] = temp[i] - b;
             }
         }
     }

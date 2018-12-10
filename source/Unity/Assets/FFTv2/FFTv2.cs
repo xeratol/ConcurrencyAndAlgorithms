@@ -48,14 +48,15 @@ public class FFTv2 : MonoBehaviour
         _helper.GetMagnitudeSpectrumScaled(_finalForward);
 
         sw.Stop();
-        UnityEngine.Debug.LogFormat("FFT Forward, Elapsed Time: {0}s", (float)sw.ElapsedTicks / TimeSpan.TicksPerSecond);
+        var numTicksSoFar = sw.ElapsedTicks;
         sw.Start();
 
         _helper.Inverse(_intermediateInverse);
         _helper.GetMagnitudeSpectrum(_finalInverse);
 
         sw.Stop();
-        UnityEngine.Debug.LogFormat("FFT Inverse, Elapsed Time: {0}s", (float)sw.ElapsedTicks / TimeSpan.TicksPerSecond);
+        var totalTicks = sw.ElapsedTicks + numTicksSoFar;
+        UnityEngine.Debug.LogFormat("Elapsed Time: {0}s", (float)totalTicks / TimeSpan.TicksPerSecond);
     }
 
     private void OnDestroy()

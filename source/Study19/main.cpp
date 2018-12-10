@@ -126,10 +126,11 @@ void WriteMatrixToImage(const matrix<std::complex<double>>& data, const std::str
 int main()
 {
     
+    auto imageMatrix = GetMatrixFromImage(fs::path("../data/small-satellite-8192-4096.bmp")); // 8192x4096
     //auto imageMatrix = GetMatrixFromImage(fs::path("../data/small-satellite-4096-2048.bmp")); // 4096x2048
     //auto imageMatrix = GetMatrixFromImage(fs::path("../data/NGC-7635-gray.bmp")); // 1024x1024
     //auto imageMatrix = GetMatrixFromImage(fs::path("../data/square-256.bmp")); // 256x256
-    auto imageMatrix = GetMatrixFromImage(fs::path("../data/square-256-128.bmp")); // 256x128
+    //auto imageMatrix = GetMatrixFromImage(fs::path("../data/square-256-128.bmp")); // 256x128
     //auto imageMatrix = GetMatrixFromImage(fs::path("../data/line-256-2.bmp")); // 256x32
     const auto MN = imageMatrix.Raw().size();
     RecenterMatrixDataForFFT(imageMatrix);
